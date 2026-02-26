@@ -1,0 +1,25 @@
+{
+  "name": "BasketTime",
+  "short_name": "BasketTime",
+  "description": "Speltidsregistrering för basket – 11 spelare, säsongsstatistik, export till Excel",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#1a1a2e",
+  "theme_color": "#1a1a2e",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='30' fill='%231a1a2e' stroke='%23e94560' stroke-width='3'/%3E%3Ctext x='32' y='40' text-anchor='middle' fill='%23e94560' font-size='28' font-family='sans-serif'%3EBT%3C/text%3E%3C/svg%3E",
+      "sizes": "64x64",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Ccircle cx='96' cy='96' r='90' fill='%231a1a2e' stroke='%23e94560' stroke-width='4'/%3E%3Ctext x='96' y='118' text-anchor='middle' fill='%23e94560' font-size='72' font-family='sans-serif'%3EBT%3C/text%3E%3C/svg%3E",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

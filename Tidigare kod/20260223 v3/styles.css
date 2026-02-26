@@ -1,0 +1,941 @@
+/* BasketTime – mobile-first, ljus grå-blå tema, touch-friendly (min 44px) */
+
+:root {
+  --bg: #eef1f5;
+  --bg-card: #ffffff;
+  --bg-elevated: #e2e8ef;
+  --text: #0d0d0d;
+  --text-muted: #5c6574;
+  --accent: #c5303a;
+  --accent-hover: #9b242c;
+  --primary: #2b5a8a;
+  --primary-hover: #1e4266;
+  --success: #2d7a4a;
+  --on-court: #2d7a4a;
+  --bench: #6b7280;
+  --touch-min: 44px;
+  --safe-top: env(safe-area-inset-top);
+  --safe-bottom: env(safe-area-inset-bottom);
+  --radius: 12px;
+  --shadow: 0 2px 12px rgba(0,0,0,0.06);
+  --shadow-md: 0 4px 20px rgba(0,0,0,0.08);
+  --border: rgba(0,0,0,0.08);
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html {
+  font-size: 16px;
+  -webkit-text-size-adjust: 100%;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  margin: 0;
+  font-family: "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, Roboto, "Helvetica Neue", Arial, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.5;
+  min-height: 100vh;
+  min-height: 100dvh;
+  padding-bottom: var(--safe-bottom);
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Telefonläge: smal vy centrerad som en telefon */
+body.view-mode-phone #app {
+  max-width: 430px;
+  margin: 0 auto;
+  min-height: 100vh;
+  min-height: 100dvh;
+  box-shadow: var(--shadow-md);
+}
+
+/* Datorläge: bred vy */
+body.view-mode-desktop #app {
+  max-width: 900px;
+  margin: 0 auto;
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+body.view-mode-desktop .match-actions {
+  flex-wrap: nowrap;
+}
+
+body.view-mode-desktop .match-actions .btn {
+  flex: 0 1 auto;
+}
+
+body.view-mode-desktop .player-row {
+  grid-template-columns: 1fr 90px 90px 1fr auto;
+  font-size: 1rem;
+}
+
+body.view-mode-desktop .tab-btn {
+  font-size: 0.9rem;
+  padding: 10px 8px;
+}
+
+#app {
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+}
+
+/* ----- Header ----- */
+.app-header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: var(--bg-card);
+  padding: 12px 16px;
+  padding-top: max(12px, var(--safe-top));
+  box-shadow: var(--shadow);
+  border-bottom: 1px solid var(--border);
+}
+
+.header-clock {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  flex-wrap: wrap;
+  gap: 10px 12px;
+  margin-bottom: 12px;
+}
+
+/* Knappen ligger i headern och ska synas i alla vyer när det finns en pågående match */
+.btn-ongoing-match {
+  min-height: var(--touch-min);
+  padding: 8px 14px;
+  border: none;
+  border-radius: var(--radius);
+  background: var(--primary);
+  color: #fff;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.btn-ongoing-match:not([hidden]) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: auto;
+}
+
+.btn-ongoing-match:hover,
+.btn-ongoing-match:focus-visible {
+  background: var(--primary-hover);
+}
+
+.clock-display {
+  font-size: 1.75rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.05em;
+}
+
+.status-badge {
+  font-size: 0.85rem;
+  padding: 4px 10px;
+  border-radius: 20px;
+  background: var(--bench);
+  color: #fff;
+  font-weight: 600;
+}
+
+.status-badge.running {
+  background: var(--on-court);
+}
+
+/* När matchvyn (pågående match) är öppen: dölj flikar och vyväxlare */
+body.match-view-open .tab-nav,
+body.match-view-open .view-mode-toggle {
+  display: none;
+}
+body.match-view-open .header-clock {
+  margin-bottom: 0;
+}
+
+/* Vyväxlare Telefon / Dator */
+.view-mode-toggle {
+  display: flex;
+  gap: 0;
+  margin-top: 10px;
+  border-radius: var(--radius);
+  background: var(--bg-elevated);
+  padding: 3px;
+}
+
+.view-mode-btn {
+  flex: 1;
+  min-height: 36px;
+  padding: 6px 12px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.view-mode-btn:hover {
+  color: var(--text);
+}
+
+.view-mode-btn[aria-pressed="true"] {
+  background: var(--primary);
+  color: #fff;
+}
+
+/* Tab nav */
+.tab-nav {
+  display: flex;
+  gap: 4px;
+  border-radius: var(--radius);
+  background: var(--bg-elevated);
+  padding: 4px;
+}
+
+.tab-btn {
+  flex: 1;
+  min-height: var(--touch-min);
+  padding: 8px 4px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.tab-btn:hover, .tab-btn:focus-visible {
+  color: var(--text);
+  background: var(--border);
+}
+
+.tab-btn.active,
+.tab-btn[aria-selected="true"] {
+  background: var(--primary);
+  color: #fff;
+}
+
+/* ----- Main content ----- */
+.main-content {
+  flex: 1;
+  padding: 16px;
+  padding-bottom: max(16px, var(--safe-bottom));
+}
+
+.tab-panel {
+  display: none;
+  animation: fadeIn 0.2s ease;
+}
+
+.tab-panel.active {
+  display: block;
+}
+
+.tab-panel[hidden] {
+  display: none !important;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* ----- Buttons ----- */
+.btn {
+  min-height: var(--touch-min);
+  padding: 10px 18px;
+  border: none;
+  border-radius: var(--radius);
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.1s;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.btn:active {
+  transform: scale(0.98);
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.btn:disabled:active {
+  transform: none;
+}
+
+.btn-touch {
+  min-height: var(--touch-min);
+}
+
+.btn-primary {
+  background: var(--primary);
+  color: #fff;
+}
+
+.btn-primary:hover, .btn-primary:focus-visible {
+  background: var(--primary-hover);
+}
+
+.btn-primary:disabled {
+  background: var(--bg-elevated);
+  color: var(--text-muted);
+}
+
+.btn-secondary {
+  background: var(--bg-elevated);
+  color: var(--text);
+}
+
+.btn-secondary:hover, .btn-secondary:focus-visible {
+  background: #c8d1db;
+}
+
+.btn-accent {
+  background: var(--accent);
+  color: #fff;
+}
+
+.btn-accent:hover, .btn-accent:focus-visible {
+  background: var(--accent-hover);
+}
+
+.btn-outline {
+  background: transparent;
+  color: var(--text);
+  border: 2px solid var(--text-muted);
+}
+
+.btn-outline:hover, .btn-outline:focus-visible {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.btn-icon {
+  min-width: var(--touch-min);
+  min-height: var(--touch-min);
+  padding: 0;
+  font-size: 1.25rem;
+  background: var(--bg-elevated);
+  color: var(--text);
+}
+
+.btn-full {
+  width: 100%;
+}
+
+/* Match actions grid */
+.match-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.match-actions .btn {
+  flex: 1 1 140px;
+}
+
+/* Telefon: visa bara Starta tid + Meny, övriga åtgärder i menyn */
+.match-menu-btn {
+  display: none;
+}
+
+body.view-mode-phone .match-menu-btn {
+  display: inline-flex;
+}
+
+body.view-mode-phone .match-action-secondary {
+  display: none;
+}
+
+/* Match-meny (modal) */
+.match-menu-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.match-menu-actions .btn-full {
+  width: 100%;
+}
+
+/* Create match form */
+.create-match-wrap {
+  margin-bottom: 24px;
+}
+
+.create-match-title {
+  margin: 0 0 16px 0;
+  font-size: 1.2rem;
+}
+
+.create-match-label {
+  display: block;
+  margin: 12px 0 6px 0;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+
+.create-match-input,
+.create-match-select {
+  width: 100%;
+  min-height: var(--touch-min);
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg-card);
+  color: var(--text);
+  font-size: 1rem;
+}
+
+.create-match-input:focus,
+.create-match-select:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+
+.create-match-select {
+  cursor: pointer;
+}
+
+.create-match-wrap .btn-full {
+  margin-top: 20px;
+}
+
+.active-match-info {
+  margin: 0 0 12px 0;
+  font-size: 0.95rem;
+  color: var(--text-muted);
+}
+
+/* "Pågående match"-knapp i Lag, Historik, Statistik */
+.panel-ongoing-wrap {
+  margin-bottom: 16px;
+}
+.panel-ongoing-wrap:not([hidden]) {
+  display: block;
+}
+
+
+/* Teams list */
+.teams-hint {
+  margin: 0 0 16px 0;
+  font-size: 0.95rem;
+  color: var(--text-muted);
+}
+
+.teams-list {
+  list-style: none;
+  margin: 0 0 20px 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.team-item {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 16px;
+  background: var(--bg-card);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  border: 1px solid var(--border);
+}
+
+.team-item-name {
+  font-weight: 600;
+  font-size: 1rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.team-item-meta {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+
+.team-item-actions {
+  display: flex;
+  gap: 8px;
+}
+
+/* ----- Player list ----- */
+.player-select-hint {
+  margin: 0 0 12px 0;
+  font-size: 0.95rem;
+  color: var(--text-muted);
+}
+
+.player-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.player-row-select .player-select-label {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  width: 100%;
+  min-height: var(--touch-min);
+  padding: 4px 0;
+  grid-column: 1 / -1;
+}
+
+.player-select-checkbox {
+  width: 24px;
+  height: 24px;
+  min-width: 24px;
+  min-height: 24px;
+  flex-shrink: 0;
+  accent-color: var(--primary);
+  cursor: pointer;
+}
+
+.player-row-select .player-name {
+  flex: 1;
+}
+
+.player-row {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr auto;
+  align-items: center;
+  gap: 8px 10px;
+  padding: 12px 14px;
+  background: var(--bg-card);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  border: 1px solid var(--border);
+  min-height: var(--touch-min);
+}
+
+/* Telefonläge: namn (mindre font) + Plan/Bänk på rad 1, räkneverken (tider + A F M) under på rad 2 */
+body.view-mode-phone .player-row {
+  grid-template-columns: minmax(0, 1fr) minmax(72px, 1fr);
+  grid-template-rows: auto auto;
+  gap: 6px 8px;
+  padding: 8px 10px;
+  align-items: center;
+  overflow: hidden;
+}
+body.view-mode-phone .player-name {
+  grid-column: 1;
+  grid-row: 1;
+  min-width: 0;
+  font-size: 0.8rem;
+  font-weight: 600;
+  overflow: hidden;
+}
+body.view-mode-phone .player-toggle {
+  grid-column: 2;
+  grid-row: 1;
+  min-width: 72px;
+  min-height: 32px;
+  padding: 4px 8px;
+  font-size: 0.75rem;
+  flex-shrink: 0;
+  align-self: center;
+  justify-self: end;
+}
+body.view-mode-phone .player-times {
+  grid-column: 1;
+  grid-row: 2;
+  flex-direction: row;
+  gap: 6px;
+  font-size: 0.8rem;
+  align-items: center;
+  min-width: 0;
+}
+body.view-mode-phone .player-stats {
+  grid-column: 2;
+  grid-row: 2;
+  flex-wrap: nowrap;
+  gap: 2px 4px;
+  justify-content: flex-end;
+  min-width: 0;
+}
+body.view-mode-phone .player-stat { gap: 1px; }
+body.view-mode-phone .player-stat-label { font-size: 0.7rem; min-width: 12px; }
+body.view-mode-phone .player-stat-assists-value,
+body.view-mode-phone .player-stat-fouls-value,
+body.view-mode-phone .player-stat-goals-value { font-size: 0.8rem; min-width: 1em; }
+body.view-mode-phone .player-stat-btn {
+  min-width: 28px;
+  min-height: 28px;
+  width: 28px;
+  height: 28px;
+  font-size: 1rem;
+}
+body.view-mode-phone .player-list {
+  gap: 6px;
+}
+
+.player-stats {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+}
+
+.player-stat {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  font-variant-numeric: tabular-nums;
+}
+
+.player-stat-label {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  min-width: 14px;
+}
+
+.player-stat-assists-value,
+.player-stat-fouls-value,
+.player-stat-goals-value {
+  min-width: 1.2em;
+  text-align: center;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.player-stat-btn {
+  min-width: 32px;
+  min-height: 32px;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg-elevated);
+  color: var(--text);
+  font-size: 1.1rem;
+  line-height: 1;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.player-stat-btn:hover:not(:disabled) {
+  background: var(--primary);
+  color: #fff;
+  border-color: var(--primary);
+}
+
+.player-stat-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.player-name {
+  font-weight: 600;
+  font-size: 1rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.player-times {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  font-variant-numeric: tabular-nums;
+  font-size: 0.9rem;
+}
+
+.player-time-court { color: var(--on-court); }
+.player-time-bench { color: var(--text-muted); }
+
+.player-toggle {
+  min-width: 88px;
+  min-height: var(--touch-min);
+  padding: 8px 12px;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.player-toggle.on-court {
+  background: var(--on-court);
+  color: #fff;
+}
+
+.player-toggle.on-bench {
+  background: var(--bg-elevated);
+  color: var(--text-muted);
+}
+
+/* ----- History list ----- */
+.history-list {
+  list-style: none;
+  margin: 0 0 20px 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.history-item {
+  display: block;
+  width: 100%;
+  min-height: var(--touch-min);
+  padding: 14px 16px;
+  background: var(--bg-card);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
+  box-shadow: var(--shadow);
+  transition: background 0.2s, border-color 0.2s;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.history-item:hover, .history-item:focus-visible {
+  background: var(--bg-elevated);
+  border-color: rgba(0,0,0,0.12);
+}
+
+.history-item-date {
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+.history-item-duration {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 32px 20px;
+  color: var(--text-muted);
+}
+
+.empty-state p { margin: 0; }
+
+/* ----- Statistics (samma listuppställning som historik) ----- */
+.stats-item.history-item {
+  text-align: left;
+  cursor: default;
+}
+
+.stats-item .detail-table.stats-detail-table {
+  margin-top: 10px;
+  font-size: 0.85rem;
+}
+
+.stats-item .stats-detail-table th,
+.stats-item .stats-detail-table td {
+  padding: 6px 8px;
+}
+
+#panel-stats .history-list {
+  margin-bottom: 16px;
+}
+
+#panel-stats .btn-full {
+  margin-top: 0;
+}
+
+/* ----- Match detail ----- */
+.match-detail-panel {
+  padding: 0 16px 16px;
+}
+
+.detail-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.detail-title {
+  margin: 0;
+  font-size: 1.2rem;
+  flex: 1;
+}
+
+.detail-table-wrap {
+  overflow-x: auto;
+  margin-bottom: 20px;
+  -webkit-overflow-scrolling: touch;
+}
+
+.detail-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.95rem;
+}
+
+.detail-table th,
+.detail-table td {
+  padding: 12px 10px;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+}
+
+.detail-table th {
+  color: var(--text-muted);
+  font-weight: 600;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.detail-table td {
+  font-variant-numeric: tabular-nums;
+}
+
+.detail-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* ----- Modals ----- */
+.modal {
+  position: fixed;
+  inset: 0;
+  margin: auto;
+  max-width: 100%;
+  max-height: 100%;
+  width: min(400px, calc(100% - 32px));
+  border: none;
+  border-radius: var(--radius);
+  background: var(--bg-card);
+  color: var(--text);
+  box-shadow: 0 24px 48px rgba(0,0,0,0.12);
+  padding: 0;
+}
+
+.modal::backdrop {
+  background: rgba(0,0,0,0.35);
+}
+
+.modal-content {
+  padding: 24px;
+}
+
+.modal-title {
+  margin: 0 0 16px 0;
+  font-size: 1.25rem;
+}
+
+.modal-wide {
+  width: min(420px, calc(100% - 32px));
+}
+
+.modal-label {
+  margin: 16px 0 8px 0;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+
+.modal-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
+  flex-wrap: wrap;
+}
+
+.modal-actions .btn { flex: 1; min-width: 100px; }
+
+.edit-names-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.edit-name-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.edit-name-row label {
+  flex: 0 0 80px;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+
+.edit-name-row input {
+  flex: 1;
+  min-height: var(--touch-min);
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg-card);
+  color: var(--text);
+  font-size: 1rem;
+}
+
+.edit-name-row input:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+
+/* ----- Utility ----- */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0,0,0,0);
+  border: 0;
+}
+
+/* Smal viewport i datorläge: namn, tider+statistik, Plan/Bänk på egen rad (gäller inte telefonläge) */
+@media (max-width: 520px) {
+  body.view-mode-desktop .player-row {
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto auto auto;
+  }
+  body.view-mode-desktop .player-name { grid-column: 1 / -1; }
+  body.view-mode-desktop .player-times { grid-column: 1; }
+  body.view-mode-desktop .player-stats { grid-column: 2; }
+  body.view-mode-desktop .player-toggle { grid-column: 1 / -1; justify-self: start; }
+}
+
+@media (min-width: 521px) and (max-width: 700px) {
+  .player-row {
+    grid-template-columns: 1fr minmax(0, 1fr) minmax(200px, 1fr) auto;
+  }
+}
+
+@media (min-width: 701px) {
+  .player-row {
+    grid-template-columns: 1fr 80px 80px 1fr auto;
+  }
+}

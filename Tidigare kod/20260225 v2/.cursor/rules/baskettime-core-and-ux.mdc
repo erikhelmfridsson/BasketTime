@@ -1,0 +1,43 @@
+---
+description: BasketTime kärnfunktioner, data och UX-beslut (PWA, lag, match, statistik, layout)
+alwaysApply: true
+---
+
+# BasketTime – kärnapp och UX
+
+## Översikt
+- **PWA**: manifest.json, sw.js (offline), localStorage med versionerade nycklar. Kör med `npx serve`.
+- **Navigation**: flikar Match, Lag, Historik, Statistik. Ingen "Pågående match"-knapp eller "Pausad"-badge i headern (borttagna).
+- **Vyväljare**: Telefon / Dator i headern; val sparas i `baskettime.viewMode.v1`. Telefon = smal layout (max 430px), Dator = bredare (max 900px).
+
+## Matchflöde
+- **Ny match**: formulär med matchnamn, datum, välj lag → **Börja** skapar match och laddar lagets spelare.
+- **Spelarval**: kryssa vilka som spelar (minst en); **Starta tid** aktiveras. Val låses när matchen startar.
+- **Timer**: en knapp **Starta tid** / **Stoppa tid**; Date-baserad beräkning, paus vid `visibilitychange`. `pauseMatch()` stoppar intervallet först, guard i `tick()` när `!state.matchRunning`.
+- **Match-ID**: unikt från namn + datum (`getMatchId(name, dateISO)`). Samma namn + datum → uppdaterar samma match vid Spara; nytt namn = ny match.
+- **Avsluta match**: sparar till historik, stoppar klockan, nollställer klockan till 00:00, rensar matchkontext, visar "Ny match"-vyn.
+- **Återställ match**: nollställer tider och spelarval, behåller matchkontext (samma namn/datum/lag).
+- **Ny match** (knapp): rensar pågående match (sparas inte), visar formuläret Ny match.
+
+## Lag och data
+- **Lag**: `baskettime.teams.v1` (id, namn, spelare med id+namn). Flik Lag: lista, Nytt lag, Redigera, Radera.
+- **Matcher**: `baskettime.matches.v1`. Match har name, dateISO, teamId, teamNameAtTime, matchSeconds, players (playerId, playerNameAtTime, secondsOnCourt, assists, fouls, goals).
+- **Spelare per match**: `playerInMatch` (val), `playerAssists`, `playerFouls`, `playerGoals`; sparas med matchen.
+
+## Statistik
+- Säsongstotals per **spelare + lag** (samma namn i olika lag = separata rader). Lagtagg visas.
+- Lista som historik: spelarnamn + lagnamn ovanför tabell; tabell med Plan, Bänk, %, Matcher, A, F, M (inga kolumner "Snitt plan" / "Snitt %").
+- **Exportera CSV** från statistikvyn; filnamn `baskettime-statistik-YYYYMMDD-HHMM.csv`.
+
+## Historik
+- Lista nyast först; tryck → matchdetalj med tabell. Kolumnrubriker A, F, M (inte Assists/Fouls/Mål utskrivet). Radera match, Rensa all historik (bekräftelse), Exportera CSV från matchdetalj.
+
+## Telefonlayout (matchvy)
+- **Menyknapp**: visar dialog med Redigera namn, Avsluta match, Återställ match, Ny match; **Stäng**-knapp i menyn. När pågående match är öppen döljs flikar och vyväxlare (Telefon/Dator) i headern.
+- **Spelarkort**: rad 1 = spelarnamn (mindre font) + Plan/Bänk-knappen längst till höger; rad 2 = tider + A/F/M med +/−. Kompakt, Bänk-knappen ska inte överlappa plus-knapparna; använd `body.view-mode-phone` för layout, inte bara viewport-media.
+
+## Design
+- Ljus grå-blå skala, svart text på ljus bakgrund (`#eef1f5`, `#ffffff` kort, primär `#2b5a8a`). Plan = grön, Bänk = grå. Touch-min 44px där det är möjligt.
+
+## Filer
+- index.html, styles.css, app.js, manifest.json, sw.js. State, timer, vyer, storage och export är separerade i app.js.

@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#1a1a2e">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="description" content="BasketTime – Speltidsregistrering för basket">
+  <title>BasketTime</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div id="app">
+    <!-- Sticky header: match clock + status -->
+    <header class="app-header" role="banner">
+      <div class="header-clock" aria-live="polite">
+        <span id="master-clock" class="clock-display">00:00</span>
+        <span id="match-status" class="status-badge" aria-label="Matchstatus">Pausad</span>
+      </div>
+      <nav class="tab-nav" role="navigation" aria-label="Huvudnavigering">
+        <button type="button" class="tab-btn active" data-tab="match" aria-selected="true" aria-controls="panel-match">Match</button>
+        <button type="button" class="tab-btn" data-tab="teams" aria-selected="false" aria-controls="panel-teams">Lag</button>
+        <button type="button" class="tab-btn" data-tab="history" aria-selected="false" aria-controls="panel-history">Historik</button>
+        <button type="button" class="tab-btn" data-tab="stats" aria-selected="false" aria-controls="panel-stats">Statistik</button>
+      </nav>
+    </header>
+
+    <main class="main-content">
+      <!-- Match panel -->
+      <section id="panel-match" class="tab-panel active" role="tabpanel" aria-labelledby="tab-match">
+        <div id="create-match-wrap" class="create-match-wrap">
+          <h2 class="create-match-title">Ny match</h2>
+          <label class="create-match-label" for="input-match-name">Matchnamn</label>
+          <input type="text" id="input-match-name" class="create-match-input" placeholder="t.ex. Hemmamatch 1" aria-label="Matchnamn">
+          <label class="create-match-label" for="input-match-date">Datum</label>
+          <input type="date" id="input-match-date" class="create-match-input" aria-label="Matchdatum">
+          <label class="create-match-label" for="select-team">Välj lag</label>
+          <select id="select-team" class="create-match-select" aria-label="Välj lag">
+            <option value="">– Välj lag –</option>
+          </select>
+          <button type="button" id="btn-borja-match" class="btn btn-primary btn-touch btn-full">Börja</button>
+        </div>
+        <div id="active-match-wrap" class="active-match-wrap" hidden>
+          <p id="active-match-info" class="active-match-info" aria-live="polite"></p>
+          <div class="match-actions">
+            <button type="button" id="btn-start-pause" class="btn btn-primary btn-touch" aria-label="Starta eller stoppa tid">Starta tid</button>
+            <button type="button" id="btn-edit-names" class="btn btn-secondary btn-touch" aria-label="Redigera spelarnamn">Redigera namn</button>
+            <button type="button" id="btn-save-match" class="btn btn-accent btn-touch" aria-label="Spara match till säsong">Spara match</button>
+            <button type="button" id="btn-reset-match" class="btn btn-outline btn-touch" aria-label="Återställ match">Återställ match</button>
+          </div>
+          <ul id="player-list" class="player-list" role="list" aria-label="Spelarlista med speltid"></ul>
+        </div>
+      </section>
+
+      <!-- Teams panel -->
+      <section id="panel-teams" class="tab-panel" role="tabpanel" aria-labelledby="tab-teams" hidden>
+        <p class="teams-hint">Skapa lag och lägg till spelare. Välj sedan lag när du startar en ny match.</p>
+        <ul id="teams-list" class="teams-list" role="list"></ul>
+        <div id="teams-empty" class="empty-state" hidden>
+          <p>Inga lag ännu. Skapa ett lag nedan.</p>
+        </div>
+        <button type="button" id="btn-add-team" class="btn btn-primary btn-touch btn-full">Nytt lag</button>
+      </section>
+
+      <!-- History panel -->
+      <section id="panel-history" class="tab-panel" role="tabpanel" aria-labelledby="tab-history" hidden>
+        <div id="history-list" class="history-list" role="list"></div>
+        <div id="history-empty" class="empty-state" hidden>
+          <p>Inga matcher sparade ännu.</p>
+        </div>
+        <button type="button" id="btn-clear-all-history" class="btn btn-outline btn-touch btn-full" aria-label="Rensa hela säsongshistoriken">Rensa all historik</button>
+      </section>
+
+      <!-- Statistics panel -->
+      <section id="panel-stats" class="tab-panel" role="tabpanel" aria-labelledby="tab-stats" hidden>
+        <div id="stats-list" class="stats-list"></div>
+        <div id="stats-empty" class="empty-state" hidden>
+          <p>Ingen statistik ännu. Spara minst en match.</p>
+        </div>
+      </section>
+
+      <!-- Match detail (shown when a match is selected from history) -->
+      <section id="panel-match-detail" class="tab-panel match-detail-panel" role="tabpanel" hidden>
+        <div class="detail-header">
+          <button type="button" id="btn-back-from-detail" class="btn btn-icon btn-touch" aria-label="Tillbaka till historik">←</button>
+          <h2 id="detail-title" class="detail-title"></h2>
+        </div>
+        <div id="detail-table-wrap" class="detail-table-wrap"></div>
+        <div class="detail-actions">
+          <button type="button" id="btn-export-csv" class="btn btn-accent btn-touch btn-full" aria-label="Exportera match till CSV">Exportera CSV</button>
+          <button type="button" id="btn-delete-match" class="btn btn-outline btn-touch btn-full" aria-label="Radera denna match">Radera match</button>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Edit names modal (spelare i aktuell match) -->
+  <dialog id="modal-edit-names" class="modal" aria-labelledby="modal-edit-names-title" aria-modal="true">
+    <div class="modal-content">
+      <h2 id="modal-edit-names-title" class="modal-title">Redigera spelarnamn</h2>
+      <div id="edit-names-fields" class="edit-names-fields"></div>
+      <div class="modal-actions">
+        <button type="button" id="btn-close-edit-names" class="btn btn-primary btn-touch">Stäng</button>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- Edit team modal (lag namn + spelare) -->
+  <dialog id="modal-edit-team" class="modal modal-wide" aria-labelledby="modal-edit-team-title" aria-modal="true">
+    <div class="modal-content">
+      <h2 id="modal-edit-team-title" class="modal-title">Lag</h2>
+      <label class="create-match-label" for="input-team-name">Lagnamn</label>
+      <input type="text" id="input-team-name" class="create-match-input" aria-label="Lagnamn">
+      <p class="modal-label">Spelare i laget</p>
+      <div id="edit-team-players" class="edit-names-fields"></div>
+      <div class="modal-actions">
+        <button type="button" id="btn-remove-player" class="btn btn-outline btn-touch">Ta bort sista spelare</button>
+        <button type="button" id="btn-add-player" class="btn btn-outline btn-touch">Lägg till spelare</button>
+        <button type="button" id="btn-save-team" class="btn btn-primary btn-touch">Spara lag</button>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- Confirm delete team -->
+  <dialog id="modal-confirm-delete-team" class="modal" aria-labelledby="modal-confirm-delete-team-title" aria-modal="true">
+    <div class="modal-content">
+      <h2 id="modal-confirm-delete-team-title" class="modal-title">Radera lag?</h2>
+      <p id="modal-confirm-delete-team-body">Detta går inte att ångra.</p>
+      <div class="modal-actions">
+        <button type="button" id="btn-confirm-delete-team-no" class="btn btn-secondary btn-touch">Avbryt</button>
+        <button type="button" id="btn-confirm-delete-team-yes" class="btn btn-accent btn-touch">Radera</button>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- Confirm clear all history -->
+  <dialog id="modal-confirm-clear" class="modal" aria-labelledby="modal-confirm-clear-title" aria-modal="true">
+    <div class="modal-content">
+      <h2 id="modal-confirm-clear-title" class="modal-title">Rensa all historik?</h2>
+      <p>Alla sparade matcher och statistik raderas. Detta går inte att ångra.</p>
+      <div class="modal-actions">
+        <button type="button" id="btn-confirm-clear-no" class="btn btn-secondary btn-touch">Avbryt</button>
+        <button type="button" id="btn-confirm-clear-yes" class="btn btn-accent btn-touch">Rensa allt</button>
+      </div>
+    </div>
+  </dialog>
+
+  <script src="app.js"></script>
+</body>
+</html>
