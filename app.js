@@ -48,10 +48,10 @@
       if (r.ok) {
         apiState.available = true;
         apiState.loggedIn = true;
-        return true;
+        return { ok: true };
       }
-      return false;
-    }).catch(function () { return false; });
+      return { ok: false, status: r.status };
+    }).catch(function () { return { ok: false, status: 0 }; });
   }
 
   function loadTeamsFromApi() {
@@ -1842,10 +1842,18 @@
 
   function showAppHideLogin() {
     document.body.classList.add('app-logged-in');
+    var loginEl = document.getElementById('login-screen');
+    var appEl = document.getElementById('app');
+    if (loginEl) loginEl.style.display = 'none';
+    if (appEl) appEl.style.display = '';
   }
 
   function showLoginHideApp() {
     document.body.classList.remove('app-logged-in');
+    var loginEl = document.getElementById('login-screen');
+    var appEl = document.getElementById('app');
+    if (loginEl) loginEl.style.display = '';
+    if (appEl) appEl.style.display = 'none';
   }
 
   function showLoginError(msg) {
@@ -1930,13 +1938,19 @@
       setupLoginForm();
       return;
     }
-    checkApiSession().then(function (loggedIn) {
-      if (loggedIn) {
+    checkApiSession().then(function (result) {
+      if (result.ok) {
         return Promise.all([loadTeamsFromApi(), loadMatchesFromApi()]).then(function (results) {
           state.teams = normalizeTeams(results[0] || []);
           stateMatchesCache = results[1] || [];
           finishRunInit();
         });
+      }
+      if (result.status === 401) {
+        clearStoredUser();
+        showLoginHideApp();
+        setupLoginForm();
+        return;
       }
       state.teams = loadTeams();
       stateMatchesCache = null;
