@@ -33,6 +33,7 @@
   "createMatch.selectTeamPlaceholder": "– Välj lag –",
   "createMatch.start": "Börja",
 
+  "activeMatch.goToMatch": "Gå till match",
   "activeMatch.startPause": "Starta tid",
   "activeMatch.stopPause": "Stoppa tid",
   "activeMatch.menu": "Meny",
@@ -40,6 +41,7 @@
   "activeMatch.saveMatch": "Avsluta match",
   "activeMatch.resetMatch": "Återställ match",
   "activeMatch.newMatch": "Ny match",
+  "activeMatch.ariaGoToMatch": "Gå till matchvy",
   "activeMatch.ariaStartPause": "Starta eller stoppa tid",
   "activeMatch.ariaMenu": "Meny",
   "activeMatch.ariaEditNames": "Redigera spelarnamn",

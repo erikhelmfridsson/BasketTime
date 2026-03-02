@@ -33,6 +33,7 @@
   "createMatch.selectTeamPlaceholder": "– Select team –",
   "createMatch.start": "Start",
 
+  "activeMatch.goToMatch": "Go to match",
   "activeMatch.startPause": "Start time",
   "activeMatch.stopPause": "Stop time",
   "activeMatch.menu": "Menu",
@@ -40,6 +41,7 @@
   "activeMatch.saveMatch": "End match",
   "activeMatch.resetMatch": "Reset match",
   "activeMatch.newMatch": "New match",
+  "activeMatch.ariaGoToMatch": "Go to match view",
   "activeMatch.ariaStartPause": "Start or stop time",
   "activeMatch.ariaMenu": "Menu",
   "activeMatch.ariaEditNames": "Edit player names",

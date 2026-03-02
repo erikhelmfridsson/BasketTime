@@ -165,7 +165,7 @@
     ensureState();
     var base = state.playerCourtSeconds[index] || 0;
     var since = state.playerOnCourtSince[index];
-    if (!state.matchRunning || since === null) return base;
+    if (!state.matchRunning || since === null || since === 0) return base;
     var extra = Math.floor((Date.now() - since) / 1000);
     return base + extra;
   }
@@ -194,12 +194,28 @@
     }
   }
 
+  function goToMatchView() {
+    ensureState();
+    if (countPlayersInMatch() === 0) return;
+    state.selectionLocked = true;
+    setMatchStatusDisplay(false);
+    setStartPauseButtonLabel(true);
+    renderPlayerList();
+    updateStartButtonState();
+  }
+
   function startMatch() {
     ensureState();
     if (countPlayersInMatch() === 0) return;
     state.selectionLocked = true;
     state.matchRunning = true;
     state.matchStartTime = Date.now();
+    var now = Date.now();
+    for (var i = 0; i < numPlayers(); i++) {
+      if (state.playerOnCourtSince[i] !== null && state.playerOnCourtSince[i] !== undefined) {
+        state.playerOnCourtSince[i] = now;
+      }
+    }
     startTimerTicker();
     setMatchStatusDisplay(true);
     setStartPauseButtonLabel(false);
@@ -213,11 +229,11 @@
       state.matchRunning = false;
       state.matchStartTime = null;
       for (var i = 0; i < numPlayers(); i++) {
-        if (state.playerOnCourtSince[i] !== null) {
+        if (state.playerOnCourtSince[i] !== null && state.playerOnCourtSince[i] !== 0) {
           var added = Math.floor((Date.now() - state.playerOnCourtSince[i]) / 1000);
           state.playerCourtSeconds[i] = (state.playerCourtSeconds[i] || 0) + added;
-          state.playerOnCourtSince[i] = null;
         }
+        state.playerOnCourtSince[i] = null;
       }
     }
     setMatchStatusDisplay(false);
@@ -272,11 +288,15 @@
   function setPlayerOnCourt(index, onCourt) {
     ensureState();
     var since = state.playerOnCourtSince[index];
-    if (state.matchRunning && since !== null) {
+    if (state.matchRunning && since !== null && since !== 0) {
       var added = Math.floor((Date.now() - since) / 1000);
       state.playerCourtSeconds[index] = (state.playerCourtSeconds[index] || 0) + added;
     }
-    state.playerOnCourtSince[index] = onCourt && state.matchRunning ? Date.now() : null;
+    if (onCourt) {
+      state.playerOnCourtSince[index] = state.matchRunning ? Date.now() : 0;
+    } else {
+      state.playerOnCourtSince[index] = null;
+    }
     updatePlayerRow(index);
   }
 
@@ -533,7 +553,14 @@
   }
 
   function setStartPauseButtonLabel(isPaused) {
-    if (dom.startPauseBtn) dom.startPauseBtn.textContent = isPaused ? t('activeMatch.startPause') : t('activeMatch.stopPause');
+    if (!dom.startPauseBtn) return;
+    if (!state.selectionLocked) {
+      dom.startPauseBtn.textContent = t('activeMatch.goToMatch');
+      dom.startPauseBtn.setAttribute('aria-label', t('activeMatch.ariaGoToMatch'));
+    } else {
+      dom.startPauseBtn.textContent = isPaused ? t('activeMatch.startPause') : t('activeMatch.stopPause');
+      dom.startPauseBtn.setAttribute('aria-label', t('activeMatch.ariaStartPause'));
+    }
   }
 
   function updateOngoingMatchButton() {
@@ -606,6 +633,7 @@
     var dateStr = state.currentMatchDateISO ? new Date(state.currentMatchDateISO).toLocaleDateString(undefined, { dateStyle: 'short' }) : '';
     if (activeInfo) activeInfo.textContent = state.currentMatchName + (dateStr ? ' · ' + dateStr : '') + (state.currentTeamName ? ' · ' + state.currentTeamName : '');
     renderPlayerList();
+    setStartPauseButtonLabel(state.matchRunning ? false : true);
     updateStartButtonState();
     updateOngoingMatchButton();
   }
@@ -1671,7 +1699,13 @@
     el = document.getElementById('btn-borja-match');
     if (el) el.addEventListener('click', startMatchFromForm);
     if (dom.startPauseBtn) dom.startPauseBtn.addEventListener('click', function () {
-      if (state.matchRunning) pauseMatch(); else startMatch();
+      if (!state.selectionLocked) {
+        goToMatchView();
+      } else if (state.matchRunning) {
+        pauseMatch();
+      } else {
+        startMatch();
+      }
     });
     updateStartButtonState();
     if ((el = document.getElementById('btn-edit-names'))) el.addEventListener('click', openEditNamesModal);
@@ -1901,22 +1935,22 @@
           });
         }
         return r.json().catch(function () { return {}; }).then(function (data) {
-          showLoginError(data.error || (r.status === 401 ? 'Fel användarnamn eller lösenord.' : 'Inloggning misslyckades.'));
+          var msg = data.error;
+          if (r.status === 502 || r.status === 503) {
+            msg = 'Servern startar. Vänta 30–60 sekunder och tryck på Logga in igen.';
+          } else if (r.status === 401) {
+            msg = msg || 'Fel användarnamn eller lösenord.';
+          } else {
+            msg = msg || 'Inloggning misslyckades.';
+          }
+          showLoginError(msg);
         });
-      }).catch(function () {
+      }).catch(function (err) {
         if (isRegister) {
           showLoginError('Kunde inte skapa konto. Försök igen.');
           return;
         }
-        setStoredUser(user);
-        showAppHideLogin();
-        if (!inited) {
-          inited = true;
-          init();
-          registerServiceWorker();
-        } else {
-          refreshViews();
-        }
+        showLoginError('Servern svarar inte (nätverk eller server startar). Vänta och försök igen.');
       });
   }
 
