@@ -1,10 +1,11 @@
-/* BasketTime Service Worker – cache-first for offline */
-var CACHE_NAME = 'baskettime-v2';
+/* BasketTime Service Worker – cache-first for offline. Öka CACHE_NAME vid ny deploy så att mobilen får nya filer. */
+var CACHE_NAME = 'baskettime-v4';
 var URLS = [
   './',
   './index.html',
   './styles.css',
   './app.js',
+  './i18n.js',
   './manifest.json'
 ];
 
