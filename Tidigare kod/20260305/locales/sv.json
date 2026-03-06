@@ -1,7 +1,6 @@
 {
   "app.title": "BasketTime",
   "app.description": "BasketTime – Speltidsregistrering för basket",
-  "app.version": "Version 1.0",
 
   "login.title": "Logga in",
   "login.description": "Ange dina uppgifter för att komma åt BasketTime.",
@@ -10,13 +9,7 @@
   "login.password": "Lösenord",
   "login.passwordPlaceholder": "Lösenord",
   "login.submit": "Logga in",
-  "login.loading": "Loggar in…",
   "login.register": "Skapa konto",
-  "login.errorNetwork": "Kunde inte nå servern. Kontrollera nätverket och försök igen.",
-  "login.errorServer": "Servern svarar inte. Försök igen om en stund.",
-  "login.errorInvalid": "Fel användarnamn eller lösenord.",
-  "login.errorRegister": "Kunde inte skapa konto. Försök igen.",
-  "login.errorPasswordLength": "Lösenord måste vara minst 6 tecken.",
 
   "nav.match": "Match",
   "nav.teams": "Lag",

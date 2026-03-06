@@ -1,7 +1,6 @@
 {
   "app.title": "BasketTime",
   "app.description": "BasketTime – Spielzeiterfassung für Basketball",
-  "app.version": "Version 1.0",
 
   "login.title": "Anmelden",
   "login.description": "Gib deine Daten ein, um auf BasketTime zuzugreifen.",
@@ -10,13 +9,7 @@
   "login.password": "Passwort",
   "login.passwordPlaceholder": "Passwort",
   "login.submit": "Anmelden",
-  "login.loading": "Anmeldung läuft…",
   "login.register": "Konto erstellen",
-  "login.errorNetwork": "Server nicht erreichbar. Netzwerk prüfen und erneut versuchen.",
-  "login.errorServer": "Server antwortet nicht. Bitte später erneut versuchen.",
-  "login.errorInvalid": "Falscher Benutzername oder Passwort.",
-  "login.errorRegister": "Konto konnte nicht erstellt werden. Bitte erneut versuchen.",
-  "login.errorPasswordLength": "Passwort muss mindestens 6 Zeichen haben.",
 
   "nav.match": "Spiel",
   "nav.teams": "Teams",

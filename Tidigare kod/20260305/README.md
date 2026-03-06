@@ -1,10 +1,6 @@
 # BasketTime
 
-**Version 1.0** – PWA för speltidsregistrering i basket (11 spelare, säsongsstatistik, CSV-export). Inloggning och data lagras i backend (Flask + SQLite/PostgreSQL).
-
-<!-- När appen är live på Render, lägg in länken här:
-**Live:** https://ditt-projekt.onrender.com
--->
+PWA för speltidsregistrering i basket (11 spelare, säsongsstatistik, CSV-export). Inloggning och data lagras i backend (Flask + SQLite/PostgreSQL).
 
 ## Köra lokalt (med inloggning)
 

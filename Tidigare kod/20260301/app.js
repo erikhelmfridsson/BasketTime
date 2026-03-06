@@ -165,7 +165,7 @@
     ensureState();
     var base = state.playerCourtSeconds[index] || 0;
     var since = state.playerOnCourtSince[index];
-    if (!state.matchRunning || since === null || since === 0) return base;
+    if (!state.matchRunning || since === null) return base;
     var extra = Math.floor((Date.now() - since) / 1000);
     return base + extra;
   }
@@ -194,28 +194,12 @@
     }
   }
 
-  function goToMatchView() {
-    ensureState();
-    if (countPlayersInMatch() === 0) return;
-    state.selectionLocked = true;
-    setMatchStatusDisplay(false);
-    setStartPauseButtonLabel(true);
-    renderPlayerList();
-    updateStartButtonState();
-  }
-
   function startMatch() {
     ensureState();
     if (countPlayersInMatch() === 0) return;
     state.selectionLocked = true;
     state.matchRunning = true;
     state.matchStartTime = Date.now();
-    var now = Date.now();
-    for (var i = 0; i < numPlayers(); i++) {
-      if (state.playerOnCourtSince[i] !== null && state.playerOnCourtSince[i] !== undefined) {
-        state.playerOnCourtSince[i] = now;
-      }
-    }
     startTimerTicker();
     setMatchStatusDisplay(true);
     setStartPauseButtonLabel(false);
@@ -229,11 +213,11 @@
       state.matchRunning = false;
       state.matchStartTime = null;
       for (var i = 0; i < numPlayers(); i++) {
-        if (state.playerOnCourtSince[i] !== null && state.playerOnCourtSince[i] !== 0) {
+        if (state.playerOnCourtSince[i] !== null) {
           var added = Math.floor((Date.now() - state.playerOnCourtSince[i]) / 1000);
           state.playerCourtSeconds[i] = (state.playerCourtSeconds[i] || 0) + added;
+          state.playerOnCourtSince[i] = null;
         }
-        state.playerOnCourtSince[i] = null;
       }
     }
     setMatchStatusDisplay(false);
@@ -288,15 +272,11 @@
   function setPlayerOnCourt(index, onCourt) {
     ensureState();
     var since = state.playerOnCourtSince[index];
-    if (state.matchRunning && since !== null && since !== 0) {
+    if (state.matchRunning && since !== null) {
       var added = Math.floor((Date.now() - since) / 1000);
       state.playerCourtSeconds[index] = (state.playerCourtSeconds[index] || 0) + added;
     }
-    if (onCourt) {
-      state.playerOnCourtSince[index] = state.matchRunning ? Date.now() : 0;
-    } else {
-      state.playerOnCourtSince[index] = null;
-    }
+    state.playerOnCourtSince[index] = onCourt && state.matchRunning ? Date.now() : null;
     updatePlayerRow(index);
   }
 
@@ -553,14 +533,7 @@
   }
 
   function setStartPauseButtonLabel(isPaused) {
-    if (!dom.startPauseBtn) return;
-    if (!state.selectionLocked) {
-      dom.startPauseBtn.textContent = t('activeMatch.goToMatch');
-      dom.startPauseBtn.setAttribute('aria-label', t('activeMatch.ariaGoToMatch'));
-    } else {
-      dom.startPauseBtn.textContent = isPaused ? t('activeMatch.startPause') : t('activeMatch.stopPause');
-      dom.startPauseBtn.setAttribute('aria-label', t('activeMatch.ariaStartPause'));
-    }
+    if (dom.startPauseBtn) dom.startPauseBtn.textContent = isPaused ? t('activeMatch.startPause') : t('activeMatch.stopPause');
   }
 
   function updateOngoingMatchButton() {
@@ -633,7 +606,6 @@
     var dateStr = state.currentMatchDateISO ? new Date(state.currentMatchDateISO).toLocaleDateString(undefined, { dateStyle: 'short' }) : '';
     if (activeInfo) activeInfo.textContent = state.currentMatchName + (dateStr ? ' · ' + dateStr : '') + (state.currentTeamName ? ' · ' + state.currentTeamName : '');
     renderPlayerList();
-    setStartPauseButtonLabel(state.matchRunning ? false : true);
     updateStartButtonState();
     updateOngoingMatchButton();
   }
@@ -1699,13 +1671,7 @@
     el = document.getElementById('btn-borja-match');
     if (el) el.addEventListener('click', startMatchFromForm);
     if (dom.startPauseBtn) dom.startPauseBtn.addEventListener('click', function () {
-      if (!state.selectionLocked) {
-        goToMatchView();
-      } else if (state.matchRunning) {
-        pauseMatch();
-      } else {
-        startMatch();
-      }
+      if (state.matchRunning) pauseMatch(); else startMatch();
     });
     updateStartButtonState();
     if ((el = document.getElementById('btn-edit-names'))) el.addEventListener('click', openEditNamesModal);
@@ -1890,16 +1856,6 @@
     if (appEl) appEl.style.display = 'none';
   }
 
-  function setLoginLoading(loading) {
-    var submitBtn = document.querySelector('.login-submit');
-    var registerBtn = document.getElementById('login-register-btn');
-    if (submitBtn) {
-      submitBtn.disabled = loading;
-      submitBtn.textContent = loading ? t('login.loading') : t('login.submit');
-    }
-    if (registerBtn) registerBtn.disabled = loading;
-  }
-
   function showLoginError(msg) {
     var el = document.getElementById('login-error');
     if (el) {
@@ -1919,10 +1875,9 @@
       return;
     }
     if (isRegister && (!pass || pass.length < 6)) {
-      showLoginError(t('login.errorPasswordLength'));
+      showLoginError('Lösenord måste vara minst 6 tecken.');
       return;
     }
-    setLoginLoading(true);
     var path = isRegister ? '/api/auth/register' : '/api/auth/login';
     apiFetch(path, { method: 'POST', body: { username: user, password: pass } }).then(function (r) {
         if (r.ok) {
@@ -1934,7 +1889,6 @@
             return Promise.all([loadTeamsFromApi(), loadMatchesFromApi()]).then(function (results) {
               state.teams = normalizeTeams(results[0] || []);
               stateMatchesCache = results[1] || [];
-              setLoginLoading(false);
               showAppHideLogin();
               if (!inited) {
                 inited = true;
@@ -1949,22 +1903,20 @@
         return r.json().catch(function () { return {}; }).then(function (data) {
           var msg = data.error;
           if (r.status === 502 || r.status === 503) {
-            msg = t('login.errorServer');
+            msg = 'Servern startar. Vänta 30–60 sekunder och tryck på Logga in igen.';
           } else if (r.status === 401) {
-            msg = msg || t('login.errorInvalid');
+            msg = msg || 'Fel användarnamn eller lösenord.';
           } else {
-            msg = msg || t('login.errorServer');
+            msg = msg || 'Inloggning misslyckades.';
           }
-          setLoginLoading(false);
           showLoginError(msg);
         });
       }).catch(function (err) {
-        setLoginLoading(false);
         if (isRegister) {
-          showLoginError(t('login.errorRegister'));
+          showLoginError('Kunde inte skapa konto. Försök igen.');
           return;
         }
-        showLoginError(t('login.errorNetwork'));
+        showLoginError('Servern svarar inte (nätverk eller server startar). Vänta och försök igen.');
       });
   }
 

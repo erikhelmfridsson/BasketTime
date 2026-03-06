@@ -3,7 +3,6 @@ BasketTime: Flask app – static frontend + API for users, teams, matches.
 Serves static files and mounts /api for auth, teams, matches.
 """
 import os
-import sys
 
 from flask import Flask, send_from_directory
 
@@ -12,15 +11,10 @@ from backend.routes.auth_routes import bp as auth_bp
 from backend.routes.matches_routes import bp as matches_bp
 from backend.routes.teams_routes import bp as teams_bp
 
-DEV_SECRET = "dev-secret-change-in-production"
-
 
 def create_app():
     app = Flask(__name__)
-    secret = os.environ.get("SECRET_KEY") or DEV_SECRET
-    app.config["SECRET_KEY"] = secret
-    if secret == DEV_SECRET and os.environ.get("PORT"):
-        print("VARNING: SECRET_KEY är inte satt. Sätt miljövariabeln SECRET_KEY i produktion.", file=sys.stderr)
+    app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY") or "dev-secret-change-in-production"
     database_url = os.environ.get("DATABASE_URL")
     if database_url:
         if database_url.startswith("postgres://"):

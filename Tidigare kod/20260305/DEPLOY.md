@@ -75,17 +75,3 @@ git push origin main
 ```
 
 Efter lyckad push väntar du någon minut så att Render bygger och startar om tjänsten (om Auto Deploy är på).
-
----
-
-## När ändringar inte syns på telefonen (PWA-cache)
-
-Appen cachar filer för offline. När du deployat ny kod måste cachen bytas ut.
-
-1. **Öka cache-versionen i `sw.js`** (redan gjort vid behov): ändra t.ex. `CACHE_NAME = 'baskettime-v3'` till `baskettime-v4` vid nästa deploy. Då slänger telefonen gamla filer och laddar nya.
-2. **På telefonen:** Stäng appen helt (avsluta fliken eller PWA). Öppna BasketTime igen – då hämtas ofta nytt innehåll.
-3. **Om det fortfarande är gammalt:** Rensa webbplatsdata för BasketTime:
-   - **iPhone (Safari):** Inställningar → Safari → Avancerat → Webbplatsdata → sök efter BasketTime/domänen → stryk.
-   - **Android (Chrome):** Inställningar → Sekretess → Rensa surfningsdata → avmarkera allt utom "Cachelagrade bilder och filer" ELLER välj "Cookies och webbplatsdata" för just den sidan; eller använd "Webbplatsinställningar" → hitta sidan → Rensa och spara.
-
-Efter rensning laddar du sidan igen så får du senaste versionen.

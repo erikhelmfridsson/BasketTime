@@ -1431,12 +1431,6 @@ body.theme-yellow {
   font-size: 1.25rem;
 }
 
-.app-version {
-  margin: -8px 0 12px 0;
-  font-size: 0.85rem;
-  color: var(--text-muted);
-}
-
 .modal-wide {
   width: min(420px, calc(100% - 32px));
 }

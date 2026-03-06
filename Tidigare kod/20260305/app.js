@@ -1890,16 +1890,6 @@
     if (appEl) appEl.style.display = 'none';
   }
 
-  function setLoginLoading(loading) {
-    var submitBtn = document.querySelector('.login-submit');
-    var registerBtn = document.getElementById('login-register-btn');
-    if (submitBtn) {
-      submitBtn.disabled = loading;
-      submitBtn.textContent = loading ? t('login.loading') : t('login.submit');
-    }
-    if (registerBtn) registerBtn.disabled = loading;
-  }
-
   function showLoginError(msg) {
     var el = document.getElementById('login-error');
     if (el) {
@@ -1919,10 +1909,9 @@
       return;
     }
     if (isRegister && (!pass || pass.length < 6)) {
-      showLoginError(t('login.errorPasswordLength'));
+      showLoginError('Lösenord måste vara minst 6 tecken.');
       return;
     }
-    setLoginLoading(true);
     var path = isRegister ? '/api/auth/register' : '/api/auth/login';
     apiFetch(path, { method: 'POST', body: { username: user, password: pass } }).then(function (r) {
         if (r.ok) {
@@ -1934,7 +1923,6 @@
             return Promise.all([loadTeamsFromApi(), loadMatchesFromApi()]).then(function (results) {
               state.teams = normalizeTeams(results[0] || []);
               stateMatchesCache = results[1] || [];
-              setLoginLoading(false);
               showAppHideLogin();
               if (!inited) {
                 inited = true;
@@ -1949,22 +1937,20 @@
         return r.json().catch(function () { return {}; }).then(function (data) {
           var msg = data.error;
           if (r.status === 502 || r.status === 503) {
-            msg = t('login.errorServer');
+            msg = 'Servern startar. Vänta 30–60 sekunder och tryck på Logga in igen.';
           } else if (r.status === 401) {
-            msg = msg || t('login.errorInvalid');
+            msg = msg || 'Fel användarnamn eller lösenord.';
           } else {
-            msg = msg || t('login.errorServer');
+            msg = msg || 'Inloggning misslyckades.';
           }
-          setLoginLoading(false);
           showLoginError(msg);
         });
       }).catch(function (err) {
-        setLoginLoading(false);
         if (isRegister) {
-          showLoginError(t('login.errorRegister'));
+          showLoginError('Kunde inte skapa konto. Försök igen.');
           return;
         }
-        showLoginError(t('login.errorNetwork'));
+        showLoginError('Servern svarar inte (nätverk eller server startar). Vänta och försök igen.');
       });
   }
 

@@ -1,0 +1,33 @@
+---
+description: BasketTime-projektets kontext och beslut från tidigare arbete (i18n, buggar, konventioner)
+alwaysApply: true
+---
+
+# BasketTime – kontext för fortsatt arbete
+
+## Projekt
+- **BasketTime**: vanillajs-app (HTML, CSS, app.js). Inget ramverk.
+- Kör gärna med lokal server (t.ex. Live Server eller `npx serve .`) så att `fetch('locales/*.json')` fungerar; vid `file://` används inbäddade fallbacks.
+
+## Flerspråk (i18n)
+- **Språkfiler**: `locales/sv.json`, `locales/en.json`, `locales/de.json` med samma nycklar.
+- **Modul**: `i18n.js` – laddar språk, sparar val i `localStorage` under `baskettime.lang`, exponerar `t('nyckel')` och `t('nyckel', { n: 1 })` för parametriserade texter.
+- **HTML**: använd `data-i18n="nyckel"`, `data-i18n-placeholder`, `data-i18n-aria-label`; i18n uppdaterar dessa vid `apply()` / språkbyte.
+- **Språkväxlare**: SV | EN | DE i headern. Under pågående match döljs språkväljaren (klass `match-view-open` på body).
+- **Fallbacks**: i `i18n.js` finns inbäddade `FALLBACK_SV`, `FALLBACK_EN`, `FALLBACK_DE` så att appen och språkbytet fungerar även vid file:// eller misslyckad fetch.
+
+## Viktiga kodkonventioner och buggar att undvika
+- **Använd aldrig variabelnamnet `t`** för lag, objekt eller loopvariabler – det skuggar översättningsfunktionen `t()`. Använd t.ex. `team`, `item` eller `row`.
+- **Appstart**: `init()` körs på `DOMContentLoaded` (inte på `i18n-ready`), så knappar och lyssnare fungerar direkt. När i18n är redo anropas `refreshViews()` och språkknapparna uppdateras.
+- **Service worker**: cache-namn `baskettime-v2`; vid större ändringar kan cache-namn ökas så att gamla filer inte serveras.
+
+## Viktiga filer
+- `index.html` – layout, data-i18n, språkväxlare, inkludering av `i18n.js` före `app.js`.
+- `app.js` – logik, alla användartexter via `t('nyckel')`, `refreshViews()` vid språkbyte.
+- `i18n.js` – laddning av locale, `t()`, `apply()`, fallbacks, event `i18n-ready`.
+- `locales/*.json` – översättningsnycklar för sv, en, de.
+
+## Vid felsökning
+- Knappar visar nyckelnamn (t.ex. "nav.match") → kontrollera att locale laddas (fallback eller fetch) och att `t` inte skuggas.
+- Knappar reagerar inte → kontrollera att `app.js` inte har syntaxfel (t.ex. saknad `}`) och att init körs; rensa service worker-cache vid behov.
+- Språkknappar byter inte → se till att fallbacks för en/de används vid fetch-fel och att `loadLocale(lang)` sätter rätt `strings`.
