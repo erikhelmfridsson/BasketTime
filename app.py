@@ -45,6 +45,10 @@ def create_app():
     def index():
         return send_from_directory(".", "index.html")
 
+    @app.route("/landing")
+    def landing():
+        return send_from_directory(".", "landing.html")
+
     @app.route("/<path:path>")
     def static_file(path):
         return send_from_directory(".", path)

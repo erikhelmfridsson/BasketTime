@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="description" content="BasketTime – Speltidsregistrering för basket. Registrera speltid per spelare, följ statistik över säsongen och exportera till Excel.">
+  <meta name="theme-color" content="#2b5a8a">
+  <title>BasketTime – Speltidsregistrering för basket</title>
+  <link rel="icon" type="image/png" href="assets/logo.png">
+  <style>
+    :root {
+      --lp-bg: #eef1f5;
+      --lp-card: #ffffff;
+      --lp-primary: #2b5a8a;
+      --lp-primary-hover: #1e4266;
+      --lp-text: #0d0d0d;
+      --lp-muted: #5c6574;
+      --lp-success: #2d7a4a;
+      --lp-radius: 12px;
+      --lp-shadow: 0 2px 12px rgba(0,0,0,0.06);
+      --lp-shadow-lg: 0 8px 32px rgba(0,0,0,0.1);
+      --lp-safe-top: env(safe-area-inset-top);
+      --lp-safe-bottom: env(safe-area-inset-bottom);
+    }
+    *, *::before, *::after { box-sizing: border-box; }
+    html { font-size: 16px; -webkit-text-size-adjust: 100%; }
+    body {
+      margin: 0;
+      font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+      background: var(--lp-bg);
+      color: var(--lp-text);
+      line-height: 1.6;
+      min-height: 100vh;
+      padding: var(--lp-safe-top) 0 var(--lp-safe-bottom);
+      -webkit-font-smoothing: antialiased;
+    }
+    .lp-wrap {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 24px 20px 48px;
+    }
+    .lp-header {
+      text-align: center;
+      padding: 32px 0 40px;
+    }
+    .lp-logo {
+      display: block;
+      margin: 0 auto 16px;
+      width: 200px;
+      height: auto;
+      max-width: 80%;
+    }
+    .lp-title {
+      margin: 0 0 8px;
+      font-size: 1.75rem;
+      font-weight: 700;
+      color: var(--lp-text);
+    }
+    .lp-tagline {
+      margin: 0;
+      font-size: 1.1rem;
+      color: var(--lp-muted);
+    }
+    .lp-cta {
+      display: inline-block;
+      margin-top: 24px;
+      padding: 14px 32px;
+      background: var(--lp-primary);
+      color: #fff !important;
+      font-size: 1.1rem;
+      font-weight: 600;
+      text-decoration: none;
+      border-radius: var(--lp-radius);
+      border: none;
+      cursor: pointer;
+      box-shadow: var(--lp-shadow);
+      transition: background 0.2s, transform 0.1s;
+      -webkit-tap-highlight-color: transparent;
+      min-height: 48px;
+      line-height: 1.3;
+    }
+    .lp-cta:hover, .lp-cta:focus-visible {
+      background: var(--lp-primary-hover);
+      transform: translateY(-1px);
+    }
+    .lp-cta:active { transform: translateY(0); }
+    .lp-section {
+      background: var(--lp-card);
+      border-radius: var(--lp-radius);
+      box-shadow: var(--lp-shadow);
+      padding: 24px;
+      margin-bottom: 20px;
+    }
+    .lp-section h2 {
+      margin: 0 0 16px;
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: var(--lp-text);
+    }
+    .lp-features {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    .lp-features li {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 12px 0;
+      border-bottom: 1px solid rgba(0,0,0,0.06);
+    }
+    .lp-features li:last-child { border-bottom: none; }
+    .lp-features .lp-icon {
+      flex-shrink: 0;
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      background: rgba(43, 90, 138, 0.12);
+      color: var(--lp-primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+    }
+    .lp-features strong { display: block; margin-bottom: 2px; }
+    .lp-features span { color: var(--lp-muted); font-size: 0.95rem; }
+    .lp-footer {
+      text-align: center;
+      padding: 32px 0 16px;
+      color: var(--lp-muted);
+      font-size: 0.9rem;
+    }
+    .lp-footer a { color: var(--lp-primary); text-decoration: none; }
+    .lp-footer a:hover { text-decoration: underline; }
+    @media (min-width: 500px) {
+      .lp-wrap { padding: 32px 24px 56px; }
+      .lp-header { padding: 48px 0 56px; }
+      .lp-title { font-size: 2rem; }
+      .lp-section { padding: 28px; }
+      .lp-section h2 { font-size: 1.35rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="lp-wrap">
+    <header class="lp-header">
+      <img src="assets/logo.png" alt="BasketTime" class="lp-logo" width="200" height="67">
+      <h1 class="lp-title">Speltidsregistrering för basket</h1>
+      <p class="lp-tagline">Registrera speltid per spelare, följ statistik över säsongen och exportera till Excel.</p>
+      <a href="/" class="lp-cta">Öppna appen</a>
+    </header>
+
+    <section class="lp-section" aria-labelledby="lp-features-heading">
+      <h2 id="lp-features-heading">Så fungerar det</h2>
+      <ul class="lp-features">
+        <li>
+          <span class="lp-icon" aria-hidden="true">⏱</span>
+          <div>
+            <strong>Matchklocka och speltid</strong>
+            <span>Starta och pausa matchen. Markera vilka spelare som är på plan eller på bänk – tiden räknas automatiskt.</span>
+          </div>
+        </li>
+        <li>
+          <span class="lp-icon" aria-hidden="true">👥</span>
+          <div>
+            <strong>Lag och spelare</strong>
+            <span>Skapa lag med upp till 11 spelare. Välj vilka som spelar innan matchen och byt mellan plan och bänk under matchen.</span>
+          </div>
+        </li>
+        <li>
+          <span class="lp-icon" aria-hidden="true">📊</span>
+          <div>
+            <strong>Statistik och historik</strong>
+            <span>Säsongsstatistik per spelare och lag. Assists, fouls och mål per match. Grafisk vy med stapel- och linjediagram.</span>
+          </div>
+        </li>
+        <li>
+          <span class="lp-icon" aria-hidden="true">📤</span>
+          <div>
+            <strong>Export till Excel</strong>
+            <span>Exportera match och statistik till CSV som du öppnar i Excel eller Google Sheets.</span>
+          </div>
+        </li>
+        <li>
+          <span class="lp-icon" aria-hidden="true">📱</span>
+          <div>
+            <strong>PWA – fungerar offline</strong>
+            <span>Lägg till på hemskärmen på mobilen. Appen fungerar offline efter första besök.</span>
+          </div>
+        </li>
+      </ul>
+    </section>
+
+    <p style="text-align: center; margin-top: 24px;">
+      <a href="/" class="lp-cta">Öppna BasketTime</a>
+    </p>
+
+    <footer class="lp-footer">
+      BasketTime · Version 1.0
+    </footer>
+  </div>
+</body>
+</html>
