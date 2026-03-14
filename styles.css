@@ -445,8 +445,18 @@ body.match-view-open .header-clock {
 /* ----- Main content ----- */
 .main-content {
   flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
   padding: 16px;
   padding-bottom: max(16px, var(--safe-bottom));
+}
+
+#panel-match {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
 }
 
 .tab-panel {
@@ -914,6 +924,218 @@ body.view-mode-phone .player-list {
 .player-toggle.on-bench {
   background: var(--bg-elevated);
   color: var(--text-muted);
+}
+
+/* ----- Föräldravy (registrering: namn + tid + Plan/Bänk, A, Skott, Träff, %, Rebound) ----- */
+.parent-select-wrap {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 16px 0;
+}
+
+.parent-select-wrap .create-match-title {
+  margin-bottom: 16px;
+}
+
+.active-parent-wrap {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  padding: 0 0 16px 0;
+}
+
+.active-parent-wrap .match-actions {
+  flex-shrink: 0;
+  margin-bottom: 10px;
+}
+
+.parent-player-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+}
+
+.parent-player-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  grid-template-rows: auto 1fr;
+  gap: 6px 10px;
+  align-items: center;
+  padding: 8px 10px;
+  background: var(--bg-card);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  border: 1px solid var(--border);
+  flex: 1;
+  min-height: 0;
+}
+
+.parent-player-name {
+  grid-column: 1;
+  grid-row: 1;
+  font-weight: 600;
+  font-size: 0.95rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.parent-player-times {
+  grid-column: 1;
+  grid-row: 2;
+  display: flex;
+  gap: 12px;
+  font-variant-numeric: tabular-nums;
+  font-size: 0.9rem;
+}
+
+.parent-time-court { color: var(--on-court); }
+.parent-time-bench { color: var(--text-muted); }
+
+.parent-player-stats {
+  grid-column: 2 / -1;
+  grid-row: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  align-content: center;
+  gap: 6px 8px;
+  min-width: 0;
+}
+
+.parent-toggle {
+  min-width: 72px;
+  min-height: var(--touch-min);
+  padding: 8px 10px;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.parent-toggle.on-court {
+  background: var(--on-court);
+  color: #fff;
+}
+
+.parent-toggle.on-bench {
+  background: var(--bg-elevated);
+  color: var(--text-muted);
+}
+
+.parent-stat {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  font-variant-numeric: tabular-nums;
+}
+
+.parent-stat-label {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  min-width: 14px;
+}
+
+.parent-stat-pct .parent-stat-label { min-width: 1em; }
+
+.parent-stat-assists-value,
+.parent-stat-shots-value,
+.parent-stat-made-value,
+.parent-stat-pct-value,
+.parent-stat-rebounds-value {
+  min-width: 1.2em;
+  text-align: center;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.parent-stat-btn {
+  min-width: 36px;
+  min-height: 36px;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg-elevated);
+  color: var(--text);
+  font-size: 1rem;
+  line-height: 1;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.parent-stat-btn:hover:not(:disabled) {
+  background: var(--primary);
+  color: #fff;
+  border-color: var(--primary);
+}
+
+.parent-stat-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* Föräldravy: fylla tillgänglig höjd */
+#panel-match .active-parent-wrap {
+  min-height: min(400px, calc(100dvh - 180px));
+}
+
+#panel-match .parent-player-list {
+  min-height: 120px;
+}
+
+/* Telefon: föräldrarader kompakt, knappar fyller rad */
+body.view-mode-phone .parent-player-row {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-rows: auto auto auto;
+  padding: 6px 8px;
+  min-height: 0;
+}
+
+body.view-mode-phone .parent-player-name {
+  grid-column: 1;
+  grid-row: 1;
+  font-size: 0.8rem;
+}
+
+body.view-mode-phone .parent-player-times {
+  grid-column: 1;
+  grid-row: 2;
+  font-size: 0.8rem;
+}
+
+body.view-mode-phone .parent-player-stats {
+  grid-column: 1 / -1;
+  grid-row: 3;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(64px, 1fr));
+  gap: 4px;
+  align-content: stretch;
+}
+
+body.view-mode-phone .parent-toggle {
+  min-width: 64px;
+  min-height: 40px;
+  font-size: 0.75rem;
+}
+
+body.view-mode-phone .parent-stat-btn {
+  min-width: 32px;
+  min-height: 32px;
+  width: 32px;
+  height: 32px;
+  font-size: 0.9rem;
 }
 
 /* ----- History list ----- */

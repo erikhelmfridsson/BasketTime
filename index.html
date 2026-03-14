@@ -57,6 +57,7 @@
     <main class="main-content">
       <!-- Match panel -->
       <section id="panel-match" class="tab-panel active" role="tabpanel" aria-labelledby="tab-match">
+        <!-- Lag: ny match -->
         <div id="create-match-wrap" class="create-match-wrap">
           <h2 class="create-match-title" data-i18n="createMatch.title">Ny match</h2>
           <label class="create-match-label" for="input-match-name" data-i18n="createMatch.nameLabel">Matchnamn</label>
@@ -68,6 +69,28 @@
             <option value="">– Välj lag –</option>
           </select>
           <button type="button" id="btn-borja-match" class="btn btn-primary btn-touch btn-full" data-i18n="createMatch.start">Börja</button>
+        </div>
+        <!-- Förälder: välj registrering -->
+        <div id="parent-select-wrap" class="parent-select-wrap" hidden>
+          <h2 class="create-match-title" data-i18n="parent.title">Registrering</h2>
+          <label class="create-match-label" for="select-parent-session" data-i18n="parent.selectSession">Välj vad du ska registrera</label>
+          <select id="select-parent-session" class="create-match-select" data-i18n-aria-label="parent.selectSessionAria" aria-label="Välj registrering">
+            <option value="">– Välj –</option>
+          </select>
+          <button type="button" id="btn-new-parent-session" class="btn btn-primary btn-touch btn-full" data-i18n="parent.newSession">Ny registrering</button>
+        </div>
+        <!-- Förälder: aktiv registrering (namn + tid + knappar) -->
+        <div id="active-parent-wrap" class="active-parent-wrap" hidden>
+          <p id="active-parent-info" class="active-match-info" aria-live="polite"></p>
+          <div class="match-actions">
+            <button type="button" id="btn-parent-start-pause" class="btn btn-primary btn-touch" data-i18n-aria-label="activeMatch.ariaStartPause" data-i18n="activeMatch.startPause" aria-label="Starta eller stoppa tid">Starta tid</button>
+            <button type="button" id="btn-parent-menu" class="btn btn-secondary btn-touch match-menu-btn" data-i18n="activeMatch.menu" aria-label="Meny" aria-haspopup="dialog" aria-expanded="false">Meny</button>
+            <button type="button" id="btn-parent-edit-names" class="btn btn-secondary btn-touch match-action-secondary" data-i18n="activeMatch.editNames" aria-label="Redigera namn">Redigera namn</button>
+            <button type="button" id="btn-parent-save" class="btn btn-accent btn-touch match-action-secondary" data-i18n="activeMatch.saveMatch" aria-label="Avsluta och spara">Avsluta</button>
+            <button type="button" id="btn-parent-reset" class="btn btn-outline btn-touch match-action-secondary" data-i18n="activeMatch.resetMatch" aria-label="Återställ">Återställ</button>
+            <button type="button" id="btn-parent-new" class="btn btn-outline btn-touch match-action-secondary" data-i18n="activeMatch.newMatch" aria-label="Ny registrering">Ny</button>
+          </div>
+          <ul id="parent-player-list" class="parent-player-list" role="list" aria-label="Lista med namn och statistik"></ul>
         </div>
         <div id="active-match-wrap" class="active-match-wrap" hidden>
           <p id="active-match-info" class="active-match-info" aria-live="polite"></p>
@@ -194,6 +217,38 @@
     </div>
   </dialog>
 
+  <!-- Ny föräldraregistrering (namn + personer) -->
+  <dialog id="modal-new-parent" class="modal modal-wide" aria-labelledby="modal-new-parent-title" aria-modal="true">
+    <div class="modal-content">
+      <h2 id="modal-new-parent-title" class="modal-title" data-i18n="parent.modalNewTitle">Ny registrering</h2>
+      <label class="create-match-label" for="input-parent-session-name" data-i18n="parent.sessionName">Namn på registrering</label>
+      <input type="text" id="input-parent-session-name" class="create-match-input" data-i18n-placeholder="parent.sessionNamePlaceholder" placeholder="t.ex. Träning 14 mars" aria-label="Namn">
+      <p class="modal-label" data-i18n="parent.personsLabel">Personer att registrera</p>
+      <div id="edit-parent-persons" class="edit-names-fields"></div>
+      <div class="modal-actions">
+        <button type="button" id="btn-parent-remove-person" class="btn btn-outline btn-touch" data-i18n="modal.team.removePlayer">Ta bort sista</button>
+        <button type="button" id="btn-parent-add-person" class="btn btn-outline btn-touch" data-i18n="modal.team.addPlayer">Lägg till</button>
+        <button type="button" id="btn-parent-session-start" class="btn btn-primary btn-touch" data-i18n="parent.startRegister">Starta registrering</button>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- Föräldrameny -->
+  <dialog id="modal-parent-menu" class="modal" aria-labelledby="modal-parent-menu-title" aria-modal="true">
+    <div class="modal-content">
+      <h2 id="modal-parent-menu-title" class="modal-title" data-i18n="modal.matchMenu.title">Meny</h2>
+      <div class="match-menu-actions">
+        <button type="button" id="btn-parent-menu-edit-names" class="btn btn-secondary btn-touch btn-full" data-i18n="activeMatch.editNames">Redigera namn</button>
+        <button type="button" id="btn-parent-menu-save" class="btn btn-accent btn-touch btn-full" data-i18n="activeMatch.saveMatch">Avsluta</button>
+        <button type="button" id="btn-parent-menu-reset" class="btn btn-outline btn-touch btn-full" data-i18n="activeMatch.resetMatch">Återställ</button>
+        <button type="button" id="btn-parent-menu-new" class="btn btn-outline btn-touch btn-full" data-i18n="activeMatch.newMatch">Ny</button>
+      </div>
+      <div class="modal-actions match-menu-close-row">
+        <button type="button" id="btn-close-parent-menu" class="btn btn-outline btn-touch btn-full" data-i18n="modal.editNames.close">Stäng</button>
+      </div>
+    </div>
+  </dialog>
+
   <!-- Match-meny (telefonläge) -->
   <dialog id="modal-match-menu" class="modal" aria-labelledby="modal-match-menu-title" aria-modal="true">
     <div class="modal-content">
@@ -215,6 +270,11 @@
     <div class="modal-content">
       <h2 id="modal-settings-title" class="modal-title" data-i18n="settings.title">Inställningar</h2>
       <p id="app-version" class="app-version" data-i18n="app.version">Version 1.0</p>
+      <p class="modal-label" data-i18n="settings.function">Funktion</p>
+      <div class="app-mode-toggle settings-view-wrap" role="group" data-i18n-aria-label="settings.functionAria" aria-label="Välj lag- eller föräldrafunktion">
+        <button type="button" id="btn-mode-team" class="view-mode-btn" aria-pressed="true" data-mode="team" data-i18n="mode.team">Lag</button>
+        <button type="button" id="btn-mode-parent" class="view-mode-btn" aria-pressed="false" data-mode="parent" data-i18n="mode.parent">Förälder</button>
+      </div>
       <p class="modal-label" data-i18n="settings.viewMode">Visa</p>
       <div class="view-mode-toggle settings-view-wrap" role="group" data-i18n-aria-label="view.ariaGroup" aria-label="Visa appen i telefon- eller datorläge">
         <button type="button" id="btn-view-phone" class="view-mode-btn" aria-pressed="true" data-i18n-aria-label="view.ariaPhone" aria-label="Telefonläge" data-i18n="view.phone">Telefon</button>
