@@ -1006,18 +1006,19 @@ body.view-mode-phone .player-list {
   flex-wrap: wrap;
   align-items: center;
   align-content: center;
-  gap: 6px 8px;
+  gap: 10px;
   min-width: 0;
 }
 
+/* Samma stil som "Starta tid" / "Meny": storlek och touch-min */
 .parent-toggle {
-  min-width: 72px;
+  min-width: 100px;
   min-height: var(--touch-min);
-  padding: 8px 10px;
+  padding: 10px 18px;
   border: none;
-  border-radius: 8px;
-  font-size: 0.8rem;
-  font-weight: 700;
+  border-radius: var(--radius);
+  font-size: 1rem;
+  font-weight: 600;
   cursor: pointer;
   transition: background 0.2s, color 0.2s;
   -webkit-tap-highlight-color: transparent;
@@ -1036,14 +1037,14 @@ body.view-mode-phone .player-list {
 .parent-stat {
   display: inline-flex;
   align-items: center;
-  gap: 2px;
+  gap: 4px;
   font-variant-numeric: tabular-nums;
 }
 
 .parent-stat-label {
-  font-size: 0.7rem;
+  font-size: 0.85rem;
   color: var(--text-muted);
-  min-width: 14px;
+  min-width: 16px;
 }
 
 .parent-stat-pct .parent-stat-label { min-width: 1em; }
@@ -1053,32 +1054,32 @@ body.view-mode-phone .player-list {
 .parent-stat-made-value,
 .parent-stat-pct-value,
 .parent-stat-rebounds-value {
-  min-width: 1.2em;
+  min-width: 1.4em;
   text-align: center;
   font-weight: 600;
-  font-size: 0.9rem;
+  font-size: 1rem;
 }
 
+/* Knappar i samma stil som match-actions .btn (Starta tid, Meny) */
 .parent-stat-btn {
-  min-width: 36px;
-  min-height: 36px;
-  width: 36px;
-  height: 36px;
-  padding: 0;
-  border: 1px solid var(--border);
-  border-radius: 6px;
+  min-width: var(--touch-min);
+  min-height: var(--touch-min);
+  padding: 10px 14px;
+  border: none;
+  border-radius: var(--radius);
   background: var(--bg-elevated);
   color: var(--text);
-  font-size: 1rem;
+  font-size: 1.1rem;
+  font-weight: 600;
   line-height: 1;
   cursor: pointer;
+  transition: background 0.2s, color 0.2s;
   -webkit-tap-highlight-color: transparent;
 }
 
 .parent-stat-btn:hover:not(:disabled) {
   background: var(--primary);
   color: #fff;
-  border-color: var(--primary);
 }
 
 .parent-stat-btn:disabled {
@@ -1119,23 +1120,23 @@ body.view-mode-phone .parent-player-stats {
   grid-column: 1 / -1;
   grid-row: 3;
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(64px, 1fr));
-  gap: 4px;
+  grid-template-columns: repeat(auto-fill, minmax(72px, 1fr));
+  gap: 8px;
   align-content: stretch;
 }
 
 body.view-mode-phone .parent-toggle {
-  min-width: 64px;
-  min-height: 40px;
-  font-size: 0.75rem;
+  min-width: 88px;
+  min-height: var(--touch-min);
+  padding: 10px 14px;
+  font-size: 0.9rem;
 }
 
 body.view-mode-phone .parent-stat-btn {
-  min-width: 32px;
-  min-height: 32px;
-  width: 32px;
-  height: 32px;
-  font-size: 0.9rem;
+  min-width: var(--touch-min);
+  min-height: var(--touch-min);
+  padding: 10px 12px;
+  font-size: 1rem;
 }
 
 /* ----- History list ----- */
