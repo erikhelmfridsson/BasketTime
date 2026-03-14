@@ -2415,18 +2415,23 @@
             setStoredUser(u);
             apiState.available = true;
             apiState.loggedIn = true;
-            return Promise.all([loadTeamsFromApi(), loadMatchesFromApi()]).then(function (results) {
+            setLoginLoading(false);
+            showAppHideLogin();
+            if (!inited) {
+              inited = true;
+              init();
+              registerServiceWorker();
+            } else {
+              refreshViews();
+            }
+            Promise.all([loadTeamsFromApi(), loadMatchesFromApi()]).then(function (results) {
               state.teams = normalizeTeams(results[0] || []);
               stateMatchesCache = results[1] || [];
-              setLoginLoading(false);
-              showAppHideLogin();
-              if (!inited) {
-                inited = true;
-                init();
-                registerServiceWorker();
-              } else {
-                refreshViews();
-              }
+              if (inited) refreshViews();
+            }).catch(function () {
+              state.teams = loadTeams();
+              stateMatchesCache = null;
+              if (inited) refreshViews();
             });
           });
         }
@@ -2472,11 +2477,17 @@
     }
     checkApiSession().then(function (result) {
       if (result.ok) {
-        return Promise.all([loadTeamsFromApi(), loadMatchesFromApi()]).then(function (results) {
+        finishRunInit();
+        Promise.all([loadTeamsFromApi(), loadMatchesFromApi()]).then(function (results) {
           state.teams = normalizeTeams(results[0] || []);
           stateMatchesCache = results[1] || [];
-          finishRunInit();
+          if (inited) refreshViews();
+        }).catch(function () {
+          state.teams = loadTeams();
+          stateMatchesCache = null;
+          if (inited) refreshViews();
         });
+        return;
       }
       if (result.status === 401) {
         clearStoredUser();
