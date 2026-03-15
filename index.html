@@ -64,31 +64,32 @@
           <input type="text" id="input-match-name" class="create-match-input" data-i18n-placeholder="createMatch.namePlaceholder" data-i18n-aria-label="createMatch.nameAria" placeholder="t.ex. Hemmamatch 1" aria-label="Matchnamn">
           <label class="create-match-label" for="input-match-date" data-i18n="createMatch.dateLabel">Datum</label>
           <input type="date" id="input-match-date" class="create-match-input" data-i18n-aria-label="createMatch.dateAria" aria-label="Matchdatum">
-          <label class="create-match-label" for="select-team" data-i18n="createMatch.selectTeamLabel">Välj lag</label>
-          <select id="select-team" class="create-match-select" data-i18n-aria-label="createMatch.selectTeamAria" aria-label="Välj lag">
-            <option value="">– Välj lag –</option>
-          </select>
+          <div id="create-match-team-wrap" class="create-match-field-wrap">
+            <label class="create-match-label" for="select-team" data-i18n="createMatch.selectTeamLabel">Välj lag</label>
+            <select id="select-team" class="create-match-select" data-i18n-aria-label="createMatch.selectTeamAria" aria-label="Välj lag">
+              <option value="">– Välj lag –</option>
+            </select>
+          </div>
+          <div id="create-match-players-wrap" class="create-match-field-wrap" hidden>
+            <label class="create-match-label" data-i18n="createMatch.selectPlayersLabel">Välj spelare</label>
+            <p class="player-select-hint" data-i18n="createMatch.selectPlayersHint">Välj minst en spelare att registrera.</p>
+            <div id="create-match-players" class="create-match-players-list" role="group" aria-label="Spelare från alla lag"></div>
+          </div>
+          <p id="create-match-error" class="create-match-error" role="alert" hidden></p>
           <button type="button" id="btn-borja-match" class="btn btn-primary btn-touch btn-full" data-i18n="createMatch.start">Börja</button>
         </div>
-        <!-- Förälder: välj registrering -->
-        <div id="parent-select-wrap" class="parent-select-wrap" hidden>
-          <h2 class="create-match-title" data-i18n="parent.title">Registrering</h2>
-          <label class="create-match-label" for="select-parent-session" data-i18n="parent.selectSession">Välj vad du ska registrera</label>
-          <select id="select-parent-session" class="create-match-select" data-i18n-aria-label="parent.selectSessionAria" aria-label="Välj registrering">
-            <option value="">– Välj –</option>
-          </select>
-          <button type="button" id="btn-new-parent-session" class="btn btn-primary btn-touch btn-full" data-i18n="parent.newSession">Ny registrering</button>
-        </div>
-        <!-- Förälder: aktiv registrering (namn + tid + knappar) -->
+        <!-- Förälder: samma match som lag, annan vy (namn + tid + knappar) -->
         <div id="active-parent-wrap" class="active-parent-wrap" hidden>
           <p id="active-parent-info" class="active-match-info" aria-live="polite"></p>
-          <div class="match-actions">
+          <div class="match-actions parent-match-actions">
             <button type="button" id="btn-parent-start-pause" class="btn btn-primary btn-touch" data-i18n-aria-label="activeMatch.ariaStartPause" data-i18n="activeMatch.startPause" aria-label="Starta eller stoppa tid">Starta tid</button>
-            <button type="button" id="btn-parent-menu" class="btn btn-secondary btn-touch match-menu-btn" data-i18n="activeMatch.menu" aria-label="Meny" aria-haspopup="dialog" aria-expanded="false">Meny</button>
-            <button type="button" id="btn-parent-edit-names" class="btn btn-secondary btn-touch match-action-secondary" data-i18n="activeMatch.editNames" aria-label="Redigera namn">Redigera namn</button>
-            <button type="button" id="btn-parent-save" class="btn btn-accent btn-touch match-action-secondary" data-i18n="activeMatch.saveMatch" aria-label="Avsluta och spara">Avsluta</button>
-            <button type="button" id="btn-parent-reset" class="btn btn-outline btn-touch match-action-secondary" data-i18n="activeMatch.resetMatch" aria-label="Återställ">Återställ</button>
-            <button type="button" id="btn-parent-new" class="btn btn-outline btn-touch match-action-secondary" data-i18n="activeMatch.newMatch" aria-label="Ny registrering">Ny</button>
+            <button type="button" id="btn-parent-menu" class="btn btn-secondary btn-touch match-menu-btn" data-i18n="activeMatch.menu" aria-label="Meny" aria-haspup="dialog" aria-expanded="false">Meny</button>
+            <div class="parent-actions-secondary" hidden aria-hidden="true">
+              <button type="button" id="btn-parent-edit-names" class="btn btn-secondary btn-touch match-action-secondary" data-i18n="activeMatch.editNames" aria-label="Redigera namn">Redigera namn</button>
+              <button type="button" id="btn-parent-save" class="btn btn-accent btn-touch match-action-secondary" data-i18n="activeMatch.saveMatch" aria-label="Avsluta och spara">Avsluta</button>
+              <button type="button" id="btn-parent-reset" class="btn btn-outline btn-touch match-action-secondary" data-i18n="activeMatch.resetMatch" aria-label="Återställ">Återställ</button>
+              <button type="button" id="btn-parent-new" class="btn btn-outline btn-touch match-action-secondary" data-i18n="activeMatch.newMatch" aria-label="Ny match">Ny match</button>
+            </div>
           </div>
           <ul id="parent-player-list" class="parent-player-list" role="list" aria-label="Lista med namn och statistik"></ul>
         </div>
@@ -113,7 +114,10 @@
         <div id="teams-empty" class="empty-state" hidden>
           <p data-i18n="teams.empty">Inga lag ännu. Skapa ett lag nedan.</p>
         </div>
-        <button type="button" id="btn-add-team" class="btn btn-primary btn-touch btn-full" data-i18n="teams.addTeam">Nytt lag</button>
+        <div class="teams-actions-row">
+          <button type="button" id="btn-add-team" class="btn btn-primary btn-touch btn-full" data-i18n="teams.addTeam">Nytt lag</button>
+          <button type="button" id="btn-new-player" class="btn btn-secondary btn-touch btn-full" data-i18n="teams.addPlayer">Ny spelare</button>
+        </div>
       </section>
         <div id="panel-history-ongoing-wrap" class="panel-ongoing-wrap" hidden>
           <button type="button" class="btn-ongoing-match-in-panel btn btn-primary btn-touch btn-full" data-panel="history" data-i18n-aria-label="ongoing.aria" data-i18n="ongoing.button" aria-label="Gå till pågående match">Pågående match</button>
@@ -205,6 +209,23 @@
     </div>
   </dialog>
 
+  <!-- Ny spelare (koppla till lag) -->
+  <dialog id="modal-add-player" class="modal" aria-labelledby="modal-add-player-title" aria-modal="true">
+    <div class="modal-content">
+      <h2 id="modal-add-player-title" class="modal-title" data-i18n="teams.addPlayerModalTitle">Ny spelare</h2>
+      <label class="create-match-label" for="input-new-player-name" data-i18n="teams.playerNameLabel">Spelarens namn</label>
+      <input type="text" id="input-new-player-name" class="create-match-input" data-i18n-placeholder="teams.playerNamePlaceholder" placeholder="Namn" aria-label="Spelarens namn">
+      <label class="create-match-label" for="select-add-player-team" data-i18n="teams.addPlayerToTeam">Lägg till i lag</label>
+      <select id="select-add-player-team" class="create-match-select" aria-label="Välj lag">
+        <option value="">– Välj lag –</option>
+      </select>
+      <div class="modal-actions">
+        <button type="button" id="btn-add-player-cancel" class="btn btn-outline btn-touch" data-i18n="modal.cancel">Avbryt</button>
+        <button type="button" id="btn-add-player-save" class="btn btn-primary btn-touch" data-i18n="teams.addPlayerSave">Lägg till</button>
+      </div>
+    </div>
+  </dialog>
+
   <!-- Confirm delete team -->
   <dialog id="modal-confirm-delete-team" class="modal" aria-labelledby="modal-confirm-delete-team-title" aria-modal="true">
     <div class="modal-content">
@@ -213,22 +234,6 @@
       <div class="modal-actions">
         <button type="button" id="btn-confirm-delete-team-no" class="btn btn-secondary btn-touch" data-i18n="modal.cancel">Avbryt</button>
         <button type="button" id="btn-confirm-delete-team-yes" class="btn btn-accent btn-touch" data-i18n="modal.delete">Radera</button>
-      </div>
-    </div>
-  </dialog>
-
-  <!-- Ny föräldraregistrering (namn + personer) -->
-  <dialog id="modal-new-parent" class="modal modal-wide" aria-labelledby="modal-new-parent-title" aria-modal="true">
-    <div class="modal-content">
-      <h2 id="modal-new-parent-title" class="modal-title" data-i18n="parent.modalNewTitle">Ny registrering</h2>
-      <label class="create-match-label" for="input-parent-session-name" data-i18n="parent.sessionName">Namn på registrering</label>
-      <input type="text" id="input-parent-session-name" class="create-match-input" data-i18n-placeholder="parent.sessionNamePlaceholder" placeholder="t.ex. Träning 14 mars" aria-label="Namn">
-      <p class="modal-label" data-i18n="parent.personsLabel">Personer att registrera</p>
-      <div id="edit-parent-persons" class="edit-names-fields"></div>
-      <div class="modal-actions">
-        <button type="button" id="btn-parent-remove-person" class="btn btn-outline btn-touch" data-i18n="modal.team.removePlayer">Ta bort sista</button>
-        <button type="button" id="btn-parent-add-person" class="btn btn-outline btn-touch" data-i18n="modal.team.addPlayer">Lägg till</button>
-        <button type="button" id="btn-parent-session-start" class="btn btn-primary btn-touch" data-i18n="parent.startRegister">Starta registrering</button>
       </div>
     </div>
   </dialog>

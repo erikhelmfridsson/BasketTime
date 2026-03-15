@@ -25,6 +25,9 @@ def create_app():
     if database_url:
         if database_url.startswith("postgres://"):
             database_url = database_url.replace("postgres://", "postgresql://", 1)
+        # Tvinga SSL för PostgreSQL (t.ex. Render) om inte redan angivet
+        if database_url.startswith("postgresql://") and "sslmode=" not in database_url:
+            database_url += "?sslmode=require" if "?" not in database_url else "&sslmode=require"
         app.config["SQLALCHEMY_DATABASE_URI"] = database_url
     else:
         app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///baskettime.db"

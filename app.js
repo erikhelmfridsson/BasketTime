@@ -18,8 +18,7 @@
     viewMode: 'baskettime.viewMode.v1',
     theme: 'baskettime.theme.v1',
     auth: 'baskettime.auth.v1',
-    appMode: 'baskettime.appMode.v1',
-    parentSessions: 'baskettime.parentSessions.v1'
+    appMode: 'baskettime.appMode.v1'
   };
   var THEMES = ['blue', 'green', 'red', 'purple', 'black', 'yellow'];
   var TICK_MS = 250;
@@ -93,9 +92,7 @@
     selectionLocked: false,
     statsTeamFilter: [],
     historyTeamFilter: [],
-    appMode: 'team',
-    parentSessions: [],
-    currentParentSessionId: null
+    appMode: 'team'
   };
 
   function numPlayers() {
@@ -107,7 +104,7 @@
   }
 
   function hasCurrentMatch() {
-    return state.currentMatchName.trim() !== '' && state.currentTeamId !== '';
+    return state.currentMatchName.trim() !== '' && (state.currentTeamId !== '' || state.players.length > 0);
   }
 
   function ensureState() {
@@ -314,7 +311,6 @@
     state.currentMatchDateISO = '';
     state.currentTeamId = '';
     state.currentTeamName = '';
-    state.currentParentSessionId = null;
     state.matchElapsedMs = 0;
     state.players = [];
     state.playerCourtSeconds = [];
@@ -582,25 +578,6 @@
     applyAppMode();
   }
 
-  function loadParentSessions() {
-    try {
-      var raw = localStorage.getItem(STORAGE_KEYS.parentSessions);
-      if (!raw) return [];
-      var data = JSON.parse(raw);
-      return Array.isArray(data) ? data : [];
-    } catch (e) { return []; }
-  }
-
-  function saveParentSessions(sessions) {
-    try {
-      localStorage.setItem(STORAGE_KEYS.parentSessions, JSON.stringify(sessions || state.parentSessions));
-    } catch (e) {}
-  }
-
-  function hasCurrentParentSession() {
-    return state.currentParentSessionId !== null && state.currentParentSessionId !== '';
-  }
-
   // ---------- Views ----------
   var dom = {};
   function cacheDom() {
@@ -646,7 +623,7 @@
   }
 
   function updateOngoingMatchButton() {
-    if (dom.btnOngoing) dom.btnOngoing.hidden = !(hasCurrentMatch() || (state.appMode === 'parent' && hasCurrentParentSession()));
+    if (dom.btnOngoing) dom.btnOngoing.hidden = !hasCurrentMatch();
   }
 
   function updateStartButtonState() {
@@ -675,18 +652,31 @@
     var a = getPlayerAssists(index);
     var f = getPlayerFouls(index);
     var g = getPlayerGoals(index);
+    var shots = getPlayerShots(index);
+    var made = getPlayerMadeShots(index);
+    var pct = shots > 0 ? Math.round(100 * made / shots) + '%' : '–';
     var aVal = row.querySelector('.player-stat-assists-value');
     var fVal = row.querySelector('.player-stat-fouls-value');
     var gVal = row.querySelector('.player-stat-goals-value');
+    var sVal = row.querySelector('.player-stat-shots-value');
+    var mVal = row.querySelector('.player-stat-made-value');
+    var pctVal = row.querySelector('.player-stat-pct-value');
     if (aVal) aVal.textContent = a;
     if (fVal) fVal.textContent = f;
     if (gVal) gVal.textContent = g;
+    if (sVal) sVal.textContent = shots;
+    if (mVal) mVal.textContent = made;
+    if (pctVal) pctVal.textContent = pct;
     var aMinus = row.querySelector('.player-stat-assists-minus');
     var fMinus = row.querySelector('.player-stat-fouls-minus');
     var gMinus = row.querySelector('.player-stat-goals-minus');
+    var sMinus = row.querySelector('.player-stat-shots-minus');
+    var mMinus = row.querySelector('.player-stat-made-minus');
     if (aMinus) aMinus.disabled = a <= 0;
     if (fMinus) fMinus.disabled = f <= 0;
     if (gMinus) gMinus.disabled = g <= 0;
+    if (sMinus) sMinus.disabled = shots <= 0;
+    if (mMinus) mMinus.disabled = made <= 0;
   }
 
   function updateAllPlayerRows() {
@@ -698,13 +688,10 @@
 
   function applyAppMode() {
     state.appMode = getAppMode();
-    state.parentSessions = loadParentSessions();
     var createWrap = document.getElementById('create-match-wrap');
     var activeWrap = document.getElementById('active-match-wrap');
-    var parentSelectWrap = document.getElementById('parent-select-wrap');
     var activeParentWrap = document.getElementById('active-parent-wrap');
     if (state.appMode === 'parent') {
-      if (createWrap) createWrap.hidden = true;
       if (activeWrap) activeWrap.hidden = true;
       renderParentView();
       var btnTeam = document.getElementById('btn-mode-team');
@@ -712,7 +699,6 @@
       if (btnTeam) { btnTeam.classList.remove('active'); btnTeam.setAttribute('aria-pressed', 'false'); }
       if (btnParent) { btnParent.classList.add('active'); btnParent.setAttribute('aria-pressed', 'true'); }
     } else {
-      if (parentSelectWrap) parentSelectWrap.hidden = true;
       if (activeParentWrap) activeParentWrap.hidden = true;
       renderMatchPanel();
       var btnTeam = document.getElementById('btn-mode-team');
@@ -726,9 +712,7 @@
     var createWrap = document.getElementById('create-match-wrap');
     var activeWrap = document.getElementById('active-match-wrap');
     var activeInfo = document.getElementById('active-match-info');
-    var parentSelectWrap = document.getElementById('parent-select-wrap');
     var activeParentWrap = document.getElementById('active-parent-wrap');
-    if (parentSelectWrap) parentSelectWrap.hidden = true;
     if (activeParentWrap) activeParentWrap.hidden = true;
     if (!createWrap || !activeWrap) return;
     if (!hasCurrentMatch()) {
@@ -750,115 +734,32 @@
     updateOngoingMatchButton();
   }
 
+  /** Föräldravy: samma match som lag, visar create-form eller aktiv match med parent-spelarlista. */
   function renderParentView() {
-    var parentSelectWrap = document.getElementById('parent-select-wrap');
-    var activeParentWrap = document.getElementById('active-parent-wrap');
     var createWrap = document.getElementById('create-match-wrap');
     var activeWrap = document.getElementById('active-match-wrap');
-    if (createWrap) createWrap.hidden = true;
+    var activeParentWrap = document.getElementById('active-parent-wrap');
     if (activeWrap) activeWrap.hidden = true;
-    state.parentSessions = loadParentSessions();
-    if (!hasCurrentParentSession()) {
-      if (parentSelectWrap) parentSelectWrap.hidden = false;
-      if (activeParentWrap) activeParentWrap.hidden = true;
+    if (!createWrap || !activeParentWrap) return;
+    if (!hasCurrentMatch()) {
+      createWrap.hidden = false;
+      activeParentWrap.hidden = true;
       document.body.classList.remove('match-view-open');
-      renderParentSessionDropdown();
+      populateCreateMatchForm();
       updateOngoingMatchButton();
       return;
     }
-    if (parentSelectWrap) parentSelectWrap.hidden = true;
-    if (activeParentWrap) activeParentWrap.hidden = false;
+    createWrap.hidden = true;
+    activeParentWrap.hidden = false;
     document.body.classList.add('match-view-open');
-    var session = getCurrentParentSession();
-    var dateStr = session && session.dateISO ? new Date(session.dateISO).toLocaleDateString(undefined, { dateStyle: 'short' }) : '';
+    var dateStr = state.currentMatchDateISO ? state.currentMatchDateISO.slice(0, 10) : '';
     var infoEl = document.getElementById('active-parent-info');
-    if (infoEl) infoEl.textContent = (session && session.name ? session.name : t('parent.title')) + (dateStr ? ' · ' + dateStr : '');
+    var onePlayer = numPlayers() === 1 && state.players[0];
+    var infoText = state.currentMatchName + (dateStr ? ' ' + dateStr : '') + (onePlayer ? ' ' + onePlayer.name : '');
+    if (infoEl) infoEl.textContent = infoText;
     setParentStartPauseLabel(state.matchRunning ? false : true);
     renderParentPlayerList();
     updateOngoingMatchButton();
-  }
-
-  function getCurrentParentSession() {
-    for (var i = 0; i < state.parentSessions.length; i++) {
-      if (state.parentSessions[i].id === state.currentParentSessionId) return state.parentSessions[i];
-    }
-    return null;
-  }
-
-  function renderParentSessionDropdown() {
-    var sel = document.getElementById('select-parent-session');
-    if (!sel) return;
-    sel.innerHTML = '<option value="">' + t('parent.selectPlaceholder') + '</option>';
-    state.parentSessions.forEach(function (s) {
-      var dateStr = s.dateISO ? new Date(s.dateISO).toLocaleDateString(undefined, { dateStyle: 'short' }) : '';
-      var opt = document.createElement('option');
-      opt.value = s.id;
-      opt.textContent = (s.name || t('parent.title')) + (dateStr ? ' · ' + dateStr : '');
-      sel.appendChild(opt);
-    });
-  }
-
-  function loadParentSessionIntoState(session) {
-    if (!session) return;
-    state.currentParentSessionId = session.id;
-    state.currentMatchName = session.name || t('parent.title');
-    state.currentMatchDateISO = session.dateISO || new Date().toISOString();
-    state.matchElapsedMs = session.matchElapsedMs || 0;
-    state.matchRunning = false;
-    state.matchStartTime = null;
-    state.players = (session.players || []).map(function (p) {
-      return { id: p.playerId || p.id || ('p' + Date.now()), name: p.playerNameAtTime || p.name || t('default.playerN', { n: 1 }) };
-    });
-    if (state.players.length === 0) state.players = [{ id: 'p1', name: t('default.playerN', { n: 1 }) }];
-    state.playerCourtSeconds = (session.players || []).map(function (p) { return p.secondsOnCourt || 0; });
-    state.playerOnCourtSince = (session.players || []).map(function () { return null; });
-    state.playerInMatch = (session.players || []).map(function () { return true; });
-    state.playerAssists = (session.players || []).map(function (p) { return p.assists != null ? p.assists : 0; });
-    state.playerFouls = (session.players || []).map(function (p) { return p.fouls != null ? p.fouls : 0; });
-    state.playerGoals = (session.players || []).map(function (p) { return p.goals != null ? p.goals : 0; });
-    state.playerShots = (session.players || []).map(function (p) { return p.shots != null ? p.shots : 0; });
-    state.playerMadeShots = (session.players || []).map(function (p) { return p.madeShots != null ? p.madeShots : 0; });
-    state.playerRebounds = (session.players || []).map(function (p) { return p.rebounds != null ? p.rebounds : 0; });
-    while (state.playerCourtSeconds.length < state.players.length) state.playerCourtSeconds.push(0);
-    while (state.playerOnCourtSince.length < state.players.length) state.playerOnCourtSince.push(null);
-    while (state.playerInMatch.length < state.players.length) state.playerInMatch.push(true);
-    while (state.playerAssists.length < state.players.length) state.playerAssists.push(0);
-    while (state.playerFouls.length < state.players.length) state.playerFouls.push(0);
-    while (state.playerGoals.length < state.players.length) state.playerGoals.push(0);
-    while (state.playerShots.length < state.players.length) state.playerShots.push(0);
-    while (state.playerMadeShots.length < state.players.length) state.playerMadeShots.push(0);
-    while (state.playerRebounds.length < state.players.length) state.playerRebounds.push(0);
-    state.selectionLocked = true;
-  }
-
-  function saveCurrentParentSession() {
-    var session = getCurrentParentSession();
-    if (!session) return;
-    var matchSeconds = getMatchSeconds();
-    session.matchSeconds = matchSeconds;
-    session.matchElapsedMs = state.matchElapsedMs;
-    session.matchRunning = state.matchRunning;
-    session.matchStartTime = state.matchStartTime;
-    session.players = [];
-    for (var i = 0; i < numPlayers(); i++) {
-      var p = state.players[i];
-      session.players.push({
-        playerId: p ? p.id : ('p' + (i + 1)),
-        playerNameAtTime: p ? p.name : t('default.playerN', { n: i + 1 }),
-        secondsOnCourt: getCourtSecondsForPlayer(i),
-        assists: getPlayerAssists(i),
-        fouls: getPlayerFouls(i),
-        goals: getPlayerGoals(i),
-        shots: getPlayerShots(i),
-        madeShots: getPlayerMadeShots(i),
-        rebounds: getPlayerRebounds(i)
-      });
-    }
-    saveParentSessions(state.parentSessions);
-  }
-
-  function persistCurrentParentSession() {
-    saveCurrentParentSession();
   }
 
   function setParentStartPauseLabel(isPaused) {
@@ -876,8 +777,9 @@
     var a = getPlayerAssists(index);
     var shots = getPlayerShots(index);
     var made = getPlayerMadeShots(index);
-    var pct = shots > 0 ? Math.round(100 * made / shots) + '%' : '–';
+    var f = getPlayerFouls(index);
     var reb = getPlayerRebounds(index);
+    var g = getPlayerGoals(index);
     var courtEl = row.querySelector('.parent-time-court');
     var benchEl = row.querySelector('.parent-time-bench');
     var toggleEl = row.querySelector('.parent-toggle');
@@ -891,17 +793,19 @@
     var aVal = row.querySelector('.parent-stat-assists-value');
     var sVal = row.querySelector('.parent-stat-shots-value');
     var mVal = row.querySelector('.parent-stat-made-value');
-    var pctVal = row.querySelector('.parent-stat-pct-value');
+    var fVal = row.querySelector('.parent-stat-fouls-value');
     var rVal = row.querySelector('.parent-stat-rebounds-value');
+    var gVal = row.querySelector('.parent-stat-goals-value');
     if (aVal) aVal.textContent = a;
     if (sVal) sVal.textContent = shots;
     if (mVal) mVal.textContent = made;
-    if (pctVal) pctVal.textContent = pct;
+    if (fVal) fVal.textContent = f;
     if (rVal) rVal.textContent = reb;
+    if (gVal) gVal.textContent = g;
     row.querySelectorAll('.parent-stat-btn').forEach(function (b) {
       var stat = b.getAttribute('data-stat');
       var delta = parseInt(b.getAttribute('data-delta'), 10);
-      var val = stat === 'assists' ? a : stat === 'shots' ? shots : stat === 'madeShots' ? made : reb;
+      var val = stat === 'assists' ? a : stat === 'shots' ? shots : stat === 'madeShots' ? made : stat === 'fouls' ? f : stat === 'rebounds' ? reb : stat === 'goals' ? g : 0;
       b.disabled = (delta < 0 && val <= 0);
     });
   }
@@ -910,6 +814,7 @@
     var list = document.getElementById('parent-player-list');
     if (!list) return;
     ensureState();
+    var showNameOnCard = numPlayers() > 1;
     list.innerHTML = '';
     for (var i = 0; i < numPlayers(); i++) {
       var p = state.players[i] || { name: t('default.playerN', { n: i + 1 }) };
@@ -919,25 +824,47 @@
       var a = getPlayerAssists(i);
       var shots = getPlayerShots(i);
       var made = getPlayerMadeShots(i);
-      var pct = shots > 0 ? Math.round(100 * made / shots) + '%' : '–';
+      var f = getPlayerFouls(i);
       var reb = getPlayerRebounds(i);
+      var g = getPlayerGoals(i);
       var li = document.createElement('li');
-      li.className = 'parent-player-row';
+      li.className = 'parent-player-card';
       li.id = 'parent-player-row-' + i;
       li.setAttribute('role', 'listitem');
       li.innerHTML =
-        '<span class="parent-player-name">' + escapeHtml(p.name) + '</span>' +
-        '<div class="parent-player-times">' +
-          '<span class="parent-time-court" aria-label="' + escapeHtml(t('table.timeCourtAria')) + '">' + formatMmSs(courtSec) + '</span>' +
-          '<span class="parent-time-bench" aria-label="' + escapeHtml(t('table.timeBenchAria')) + '">' + formatMmSs(benchSec) + '</span>' +
+        '<div class="parent-card-header">' +
+          (showNameOnCard ? '<span class="parent-card-player-name">' + escapeHtml(p.name) + '</span>' : '') +
+          '<div class="parent-card-times">' +
+            '<span class="parent-time-court" aria-label="' + escapeHtml(t('table.timeCourtAria')) + '">' + formatMmSs(courtSec) + '</span>' +
+            ' <span class="parent-time-bench" aria-label="' + escapeHtml(t('table.timeBenchAria')) + '">' + formatMmSs(benchSec) + '</span>' +
+          '</div>' +
         '</div>' +
-        '<div class="parent-player-stats">' +
-          '<button type="button" class="parent-toggle ' + (onCourt ? 'on-court' : 'on-bench') + ' btn-touch" data-player-index="' + i + '" aria-pressed="' + onCourt + '">' + (onCourt ? t('player.onCourt') : t('player.onBench')) + '</button>' +
-          '<div class="parent-stat"><span class="parent-stat-label">A</span><span class="parent-stat-assists-value">' + a + '</span><button type="button" class="parent-stat-btn parent-stat-btn-minus btn-touch" data-player-index="' + i + '" data-stat="assists" data-delta="-1">−</button><button type="button" class="parent-stat-btn parent-stat-btn-plus btn-touch" data-player-index="' + i + '" data-stat="assists" data-delta="1">+</button></div>' +
-          '<div class="parent-stat"><span class="parent-stat-label">' + t('parent.shotsShort') + '</span><span class="parent-stat-shots-value">' + shots + '</span><button type="button" class="parent-stat-btn parent-stat-btn-minus btn-touch" data-player-index="' + i + '" data-stat="shots" data-delta="-1">−</button><button type="button" class="parent-stat-btn parent-stat-btn-plus btn-touch" data-player-index="' + i + '" data-stat="shots" data-delta="1">+</button></div>' +
-          '<div class="parent-stat"><span class="parent-stat-label">' + t('parent.madeShort') + '</span><span class="parent-stat-made-value">' + made + '</span><button type="button" class="parent-stat-btn parent-stat-btn-minus btn-touch" data-player-index="' + i + '" data-stat="madeShots" data-delta="-1">−</button><button type="button" class="parent-stat-btn parent-stat-btn-plus btn-touch" data-player-index="' + i + '" data-stat="madeShots" data-delta="1">+</button></div>' +
-          '<div class="parent-stat parent-stat-pct"><span class="parent-stat-label">%</span><span class="parent-stat-pct-value">' + pct + '</span></div>' +
-          '<div class="parent-stat"><span class="parent-stat-label">' + t('parent.reboundShort') + '</span><span class="parent-stat-rebounds-value">' + reb + '</span><button type="button" class="parent-stat-btn parent-stat-btn-minus btn-touch" data-player-index="' + i + '" data-stat="rebounds" data-delta="-1">−</button><button type="button" class="parent-stat-btn parent-stat-btn-plus btn-touch" data-player-index="' + i + '" data-stat="rebounds" data-delta="1">+</button></div>' +
+        '<button type="button" class="parent-toggle ' + (onCourt ? 'on-court' : 'on-bench') + ' btn-touch" data-player-index="' + i + '" aria-pressed="' + onCourt + '">' + (onCourt ? t('player.onCourt') : t('player.onBench')) + '</button>' +
+        '<div class="parent-card-stats">' +
+          '<div class="parent-card-stat-row">' +
+            '<span class="parent-card-stat-label">' + t('parent.shots') + '</span>' +
+            '<button type="button" class="parent-stat-btn parent-stat-btn-plus btn-touch" data-player-index="' + i + '" data-stat="shots" data-delta="1">+</button><span class="parent-stat-shots-value">' + shots + '</span><button type="button" class="parent-stat-btn parent-stat-btn-minus btn-touch" data-player-index="' + i + '" data-stat="shots" data-delta="-1">−</button>' +
+          '</div>' +
+          '<div class="parent-card-stat-row">' +
+            '<span class="parent-card-stat-label">' + t('parent.hit') + '</span>' +
+            '<button type="button" class="parent-stat-btn parent-stat-btn-plus btn-touch" data-player-index="' + i + '" data-stat="madeShots" data-delta="1">+</button><span class="parent-stat-made-value">' + made + '</span><button type="button" class="parent-stat-btn parent-stat-btn-minus btn-touch" data-player-index="' + i + '" data-stat="madeShots" data-delta="-1">−</button>' +
+          '</div>' +
+          '<div class="parent-card-stat-row">' +
+            '<span class="parent-card-stat-label">' + t('parent.foul') + '</span>' +
+            '<button type="button" class="parent-stat-btn parent-stat-btn-plus btn-touch" data-player-index="' + i + '" data-stat="fouls" data-delta="1">+</button><span class="parent-stat-fouls-value">' + f + '</span><button type="button" class="parent-stat-btn parent-stat-btn-minus btn-touch" data-player-index="' + i + '" data-stat="fouls" data-delta="-1">−</button>' +
+          '</div>' +
+          '<div class="parent-card-stat-row">' +
+            '<span class="parent-card-stat-label">' + t('parent.assist') + '</span>' +
+            '<button type="button" class="parent-stat-btn parent-stat-btn-plus btn-touch" data-player-index="' + i + '" data-stat="assists" data-delta="1">+</button><span class="parent-stat-assists-value">' + a + '</span><button type="button" class="parent-stat-btn parent-stat-btn-minus btn-touch" data-player-index="' + i + '" data-stat="assists" data-delta="-1">−</button>' +
+          '</div>' +
+          '<div class="parent-card-stat-row">' +
+            '<span class="parent-card-stat-label">' + t('parent.rebound') + '</span>' +
+            '<button type="button" class="parent-stat-btn parent-stat-btn-plus btn-touch" data-player-index="' + i + '" data-stat="rebounds" data-delta="1">+</button><span class="parent-stat-rebounds-value">' + reb + '</span><button type="button" class="parent-stat-btn parent-stat-btn-minus btn-touch" data-player-index="' + i + '" data-stat="rebounds" data-delta="-1">−</button>' +
+          '</div>' +
+          '<div class="parent-card-stat-row">' +
+            '<span class="parent-card-stat-label">' + t('parent.points') + '</span>' +
+            '<button type="button" class="parent-stat-btn parent-stat-btn-plus btn-touch" data-player-index="' + i + '" data-stat="goals" data-delta="1">+</button><span class="parent-stat-goals-value">' + g + '</span><button type="button" class="parent-stat-btn parent-stat-btn-minus btn-touch" data-player-index="' + i + '" data-stat="goals" data-delta="-1">−</button>' +
+          '</div>' +
         '</div>';
       list.appendChild(li);
     }
@@ -957,42 +884,169 @@
     });
   }
 
+  /** Returnerar alla spelare från alla lag (för föräldravyn spelarval). */
+  function getAllPlayersFromTeams() {
+    var list = [];
+    state.teams.forEach(function (team) {
+      (team.players || []).forEach(function (p) {
+        list.push({ id: p.id, name: p.name, teamId: team.id, teamName: team.name });
+      });
+    });
+    return list;
+  }
+
   function populateCreateMatchForm() {
+    setCreateMatchError('');
     var nameEl = document.getElementById('input-match-name');
     var dateEl = document.getElementById('input-match-date');
     var selectEl = document.getElementById('select-team');
+    var teamWrap = document.getElementById('create-match-team-wrap');
+    var playersWrap = document.getElementById('create-match-players-wrap');
+    var playersContainer = document.getElementById('create-match-players');
     if (dateEl && !dateEl.value) {
       var today = new Date();
       dateEl.value = today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0') + '-' + String(today.getDate()).padStart(2, '0');
     }
-    if (selectEl) {
-      selectEl.innerHTML = '<option value="">' + t('createMatch.selectTeamPlaceholder') + '</option>';
-      state.teams.forEach(function (t) {
-        var opt = document.createElement('option');
-        opt.value = t.id;
-        opt.textContent = t.name;
-        selectEl.appendChild(opt);
-      });
+    if (state.appMode === 'parent') {
+      if (teamWrap) teamWrap.hidden = true;
+      if (playersWrap) playersWrap.hidden = false;
+      if (playersContainer) {
+        playersContainer.innerHTML = '';
+        var allPlayers = getAllPlayersFromTeams();
+        if (allPlayers.length === 0) {
+          var empty = document.createElement('p');
+          empty.className = 'empty-hint';
+          empty.textContent = t('createMatch.noPlayersYet');
+          playersContainer.appendChild(empty);
+        } else {
+          allPlayers.forEach(function (item) {
+            var label = document.createElement('label');
+            label.className = 'create-match-player-checkbox';
+            var teamStr = item.teamName ? ' (' + item.teamName + ')' : '';
+            var cb = document.createElement('input');
+            cb.type = 'checkbox';
+            cb.className = 'create-match-player-cb';
+            cb.setAttribute('data-player-id', item.id);
+            cb.setAttribute('data-player-name', item.name);
+            label.appendChild(cb);
+            label.appendChild(document.createTextNode(item.name + teamStr));
+            playersContainer.appendChild(label);
+          });
+        }
+      }
+    } else {
+      if (teamWrap) teamWrap.hidden = false;
+      if (playersWrap) playersWrap.hidden = true;
+      if (selectEl) {
+        selectEl.innerHTML = '<option value="">' + t('createMatch.selectTeamPlaceholder') + '</option>';
+        state.teams.forEach(function (team) {
+          var opt = document.createElement('option');
+          opt.value = team.id;
+          opt.textContent = team.name;
+          selectEl.appendChild(opt);
+        });
+      }
+    }
+  }
+
+  function setCreateMatchError(msg) {
+    var el = document.getElementById('create-match-error');
+    if (el) {
+      el.textContent = msg || '';
+      el.hidden = !msg;
     }
   }
 
   function startMatchFromForm() {
+    setCreateMatchError('');
     var nameEl = document.getElementById('input-match-name');
     var dateEl = document.getElementById('input-match-date');
-    var selectEl = document.getElementById('select-team');
     var name = nameEl ? nameEl.value.trim() : '';
-    var teamId = selectEl ? selectEl.value : '';
-    if (!name || !teamId) return;
-    var team = getTeamById(teamId);
-    if (!team || !team.players.length) return;
+    if (!name) {
+      setCreateMatchError(t('createMatch.errorName'));
+      return;
+    }
     var dateISO = dateEl && dateEl.value ? new Date(dateEl.value + 'T12:00:00').toISOString() : new Date().toISOString();
     state.currentMatchName = name;
     state.currentMatchDateISO = dateISO;
-    state.currentTeamId = team.id;
-    state.currentTeamName = team.name;
-    state.players = team.players.map(function (p) { return { id: p.id, name: p.name }; });
+    if (state.appMode === 'parent') {
+      var playersContainer = document.getElementById('create-match-players');
+      var checked = playersContainer ? playersContainer.querySelectorAll('.create-match-player-cb:checked') : [];
+      if (checked.length === 0) {
+        setCreateMatchError(t('createMatch.errorPlayers'));
+        return;
+      }
+      state.players = [];
+      checked.forEach(function (cb) {
+        state.players.push({
+          id: cb.getAttribute('data-player-id'),
+          name: cb.getAttribute('data-player-name')
+        });
+      });
+      state.currentTeamId = '';
+      state.currentTeamName = 'Föräldravy';
+    } else {
+      var selectEl = document.getElementById('select-team');
+      var teamId = selectEl ? selectEl.value : '';
+      if (!teamId) {
+        setCreateMatchError(t('createMatch.errorTeam'));
+        return;
+      }
+      var team = getTeamById(teamId);
+      if (!team || !team.players.length) {
+        setCreateMatchError(t('createMatch.errorTeamNoPlayers'));
+        return;
+      }
+      state.currentTeamId = team.id;
+      state.currentTeamName = team.name;
+      state.players = team.players.map(function (p) { return { id: p.id, name: p.name }; });
+    }
     ensureState();
-    renderMatchPanel();
+    if (state.appMode === 'parent') renderParentView();
+    else renderMatchPanel();
+  }
+
+  function openAddPlayerModal() {
+    var modal = document.getElementById('modal-add-player');
+    var nameEl = document.getElementById('input-new-player-name');
+    var selectEl = document.getElementById('select-add-player-team');
+    if (!modal || !nameEl || !selectEl) return;
+    nameEl.value = '';
+    selectEl.innerHTML = '<option value="">' + t('createMatch.selectTeamPlaceholder') + '</option>';
+    state.teams.forEach(function (team) {
+      var opt = document.createElement('option');
+      opt.value = team.id;
+      opt.textContent = team.name;
+      selectEl.appendChild(opt);
+    });
+    modal.showModal();
+  }
+
+  function saveNewPlayerFromModal() {
+    var nameEl = document.getElementById('input-new-player-name');
+    var selectEl = document.getElementById('select-add-player-team');
+    var modal = document.getElementById('modal-add-player');
+    if (!nameEl || !selectEl || !modal) return;
+    var name = nameEl.value.trim();
+    var teamId = selectEl.value;
+    if (!name) return;
+    if (!teamId) return;
+    var team = getTeamById(teamId);
+    if (!team) return;
+    var newPlayer = { id: 'p' + Date.now(), name: name };
+    team.players = team.players || [];
+    team.players.push(newPlayer);
+    if (apiState.loggedIn) {
+      apiFetch('/api/teams/' + encodeURIComponent(team.id), {
+        method: 'PUT',
+        body: { name: team.name, players: team.players }
+      }).catch(function () {});
+    } else {
+      saveTeams(state.teams);
+    }
+    modal.close();
+    renderTeamsList();
+    populateCreateMatchForm();
   }
 
   function renderPlayerList() {
@@ -1031,6 +1085,12 @@
       return;
     }
 
+    dom.playerList.innerHTML = '';
+    var legend = document.createElement('p');
+    legend.className = 'team-view-legend';
+    legend.setAttribute('aria-hidden', 'true');
+    legend.textContent = 'A ' + t('table.legendAssist') + ' · F ' + t('table.legendFoul') + ' · ' + pointsLetter() + ' ' + t('table.legendPoints') + ' · S ' + t('table.legendShots') + ' · T ' + t('table.legendMade');
+    dom.playerList.appendChild(legend);
     for (var i = 0; i < numPlayers(); i++) {
       if (!state.playerInMatch[i]) continue;
       var p = state.players[i] || { name: t('default.playerN', { n: i + 1 }) };
@@ -1040,22 +1100,34 @@
       var a = getPlayerAssists(i);
       var f = getPlayerFouls(i);
       var g = getPlayerGoals(i);
+      var shots = getPlayerShots(i);
+      var made = getPlayerMadeShots(i);
+      var pct = shots > 0 ? Math.round(100 * made / shots) + '%' : '–';
       var li = document.createElement('li');
-      li.className = 'player-row';
+      li.className = 'player-row player-card';
       li.id = 'player-row-' + i;
       li.setAttribute('role', 'listitem');
       li.innerHTML =
-        '<span class="player-name" id="player-name-' + i + '">' + escapeHtml(p.name) + '</span>' +
-        '<div class="player-times" aria-label="' + escapeHtml(t('table.playerTimesAria')) + '">' +
-          '<span class="player-time-court" aria-label="' + escapeHtml(t('table.timeCourtAria')) + '">' + formatMmSs(courtSec) + '</span>' +
-          '<span class="player-time-bench" aria-label="' + escapeHtml(t('table.timeBenchAria')) + '">' + formatMmSs(benchSec) + '</span>' +
+        '<div class="player-card-header">' +
+          '<span class="player-name" id="player-name-' + i + '">' + escapeHtml(p.name) + '</span>' +
+          '<div class="player-times player-card-times" aria-label="' + escapeHtml(t('table.playerTimesAria')) + '">' +
+            '<span class="player-time-court" aria-label="' + escapeHtml(t('table.timeCourtAria')) + '">' + formatMmSs(courtSec) + '</span>' +
+            ' <span class="player-time-bench" aria-label="' + escapeHtml(t('table.timeBenchAria')) + '">' + formatMmSs(benchSec) + '</span>' +
+          '</div>' +
         '</div>' +
-        '<div class="player-stats" aria-label="' + escapeHtml(t('table.statsAria')) + '">' +
-          '<div class="player-stat"><span class="player-stat-label" aria-hidden="true">A</span><span class="player-stat-assists-value">' + a + '</span><button type="button" class="player-stat-btn player-stat-assists-minus btn-touch" data-player-index="' + i + '" data-stat="assists" data-delta="-1" aria-label="' + escapeHtml(t('player.decreaseAssists')) + '">−</button><button type="button" class="player-stat-btn player-stat-assists-plus btn-touch" data-player-index="' + i + '" data-stat="assists" data-delta="1" aria-label="' + escapeHtml(t('player.increaseAssists')) + '">+</button></div>' +
-          '<div class="player-stat"><span class="player-stat-label" aria-hidden="true">F</span><span class="player-stat-fouls-value">' + f + '</span><button type="button" class="player-stat-btn player-stat-fouls-minus btn-touch" data-player-index="' + i + '" data-stat="fouls" data-delta="-1" aria-label="' + escapeHtml(t('player.decreaseFouls')) + '">−</button><button type="button" class="player-stat-btn player-stat-fouls-plus btn-touch" data-player-index="' + i + '" data-stat="fouls" data-delta="1" aria-label="' + escapeHtml(t('player.increaseFouls')) + '">+</button></div>' +
-          '<div class="player-stat"><span class="player-stat-label" aria-hidden="true">' + pointsLetter() + '</span><span class="player-stat-goals-value">' + g + '</span><button type="button" class="player-stat-btn player-stat-goals-minus btn-touch" data-player-index="' + i + '" data-stat="goals" data-delta="-1" aria-label="' + escapeHtml(t('player.decreaseGoals')) + '">−</button><button type="button" class="player-stat-btn player-stat-goals-plus btn-touch" data-player-index="' + i + '" data-stat="goals" data-delta="1" aria-label="' + escapeHtml(t('player.increaseGoals')) + '">+</button></div>' +
-        '</div>' +
-        '<button type="button" class="player-toggle ' + (onCourt ? 'on-court' : 'on-bench') + ' btn-touch" data-player-index="' + i + '" aria-pressed="' + onCourt + '" aria-label="' + (onCourt ? escapeHtml(t('player.ariaOnCourt')) : escapeHtml(t('player.ariaOnBench'))) + '">' + (onCourt ? t('player.onCourt') : t('player.onBench')) + '</button>';
+        '<button type="button" class="player-toggle ' + (onCourt ? 'on-court' : 'on-bench') + ' btn-touch player-card-toggle" data-player-index="' + i + '" aria-pressed="' + onCourt + '" aria-label="' + (onCourt ? escapeHtml(t('player.ariaOnCourt')) : escapeHtml(t('player.ariaOnBench'))) + '">' + (onCourt ? t('player.onCourt') : t('player.onBench')) + '</button>' +
+        '<div class="player-stats player-card-stats" aria-label="' + escapeHtml(t('table.statsAria')) + '">' +
+          '<div class="player-stats-row player-stats-row-1">' +
+            '<div class="player-stat"><button type="button" class="player-stat-btn player-stat-assists-plus btn-touch" data-player-index="' + i + '" data-stat="assists" data-delta="1">A+</button><span class="player-stat-assists-value">' + a + '</span><button type="button" class="player-stat-btn player-stat-assists-minus btn-touch" data-player-index="' + i + '" data-stat="assists" data-delta="-1">A−</button></div>' +
+            '<div class="player-stat"><button type="button" class="player-stat-btn player-stat-fouls-plus btn-touch" data-player-index="' + i + '" data-stat="fouls" data-delta="1">F+</button><span class="player-stat-fouls-value">' + f + '</span><button type="button" class="player-stat-btn player-stat-fouls-minus btn-touch" data-player-index="' + i + '" data-stat="fouls" data-delta="-1">F−</button></div>' +
+            '<div class="player-stat"><button type="button" class="player-stat-btn player-stat-goals-plus btn-touch" data-player-index="' + i + '" data-stat="goals" data-delta="1">' + pointsLetter() + '+</button><span class="player-stat-goals-value">' + g + '</span><button type="button" class="player-stat-btn player-stat-goals-minus btn-touch" data-player-index="' + i + '" data-stat="goals" data-delta="-1">' + pointsLetter() + '−</button></div>' +
+          '</div>' +
+          '<div class="player-stats-row player-stats-row-2">' +
+            '<div class="player-stat"><button type="button" class="player-stat-btn player-stat-shots-plus btn-touch" data-player-index="' + i + '" data-stat="shots" data-delta="1">' + t('parent.shotsShort') + '+</button><span class="player-stat-shots-value">' + shots + '</span><button type="button" class="player-stat-btn player-stat-shots-minus btn-touch" data-player-index="' + i + '" data-stat="shots" data-delta="-1">' + t('parent.shotsShort') + '−</button></div>' +
+            '<div class="player-stat"><button type="button" class="player-stat-btn player-stat-made-plus btn-touch" data-player-index="' + i + '" data-stat="madeShots" data-delta="1">' + t('parent.madeShort') + '+</button><span class="player-stat-made-value">' + made + '</span><button type="button" class="player-stat-btn player-stat-made-minus btn-touch" data-player-index="' + i + '" data-stat="madeShots" data-delta="-1">' + t('parent.madeShort') + '−</button></div>' +
+            '<div class="player-stat player-stat-pct-only"><span class="player-stat-label">%</span><span class="player-stat-pct-value">' + pct + '</span></div>' +
+          '</div>' +
+        '</div>';
       dom.playerList.appendChild(li);
     }
     dom.playerList.querySelectorAll('.player-toggle').forEach(function (btn) {
@@ -1123,7 +1195,7 @@
     panel.dataset.matchId = match.id;
 
     var matchSec = match.matchSeconds || 0;
-    var html = '<table class="detail-table" role="table"><thead><tr><th>' + t('table.name') + '</th><th>' + t('table.court') + '</th><th>' + t('table.bench') + '</th><th>%</th><th>A</th><th>F</th><th>' + pointsLetter() + '</th></tr></thead><tbody>';
+    var html = '<table class="detail-table" role="table"><thead><tr><th>' + t('table.name') + '</th><th>' + t('table.court') + '</th><th>' + t('table.bench') + '</th><th>' + t('table.planPct') + '</th><th>A</th><th>F</th><th>' + pointsLetter() + '</th><th>' + t('parent.shotsShort') + '</th><th>' + t('parent.madeShort') + '</th><th>' + t('table.shotPct') + '</th></tr></thead><tbody>';
     (match.players || []).forEach(function (entry) {
       var court = entry.secondsOnCourt || 0;
       var bench = Math.max(0, matchSec - court);
@@ -1131,7 +1203,10 @@
       var assists = entry.assists != null ? entry.assists : 0;
       var fouls = entry.fouls != null ? entry.fouls : 0;
       var goals = entry.goals != null ? entry.goals : 0;
-      html += '<tr><td>' + escapeHtml(entry.playerNameAtTime || '') + '</td><td>' + formatMmSs(court) + '</td><td>' + formatMmSs(bench) + '</td><td>' + pct + '%</td><td>' + assists + '</td><td>' + fouls + '</td><td>' + goals + '</td></tr>';
+      var shots = entry.shots != null ? entry.shots : 0;
+      var madeShots = entry.madeShots != null ? entry.madeShots : 0;
+      var shotPct = shots > 0 ? (100 * madeShots / shots).toFixed(1) : '–';
+      html += '<tr><td>' + escapeHtml(entry.playerNameAtTime || '') + '</td><td>' + formatMmSs(court) + '</td><td>' + formatMmSs(bench) + '</td><td>' + pct + '%</td><td>' + assists + '</td><td>' + fouls + '</td><td>' + goals + '</td><td>' + shots + '</td><td>' + madeShots + '</td><td>' + (shotPct === '–' ? shotPct : shotPct + '%') + '</td></tr>';
     });
     html += '</tbody></table>';
     list.innerHTML = html;
@@ -1341,7 +1416,7 @@
       div.innerHTML =
         '<span class="history-item-date">' + escapeHtml(topLine) + '</span>' +
         '<table class="detail-table stats-detail-table" role="table">' +
-          '<thead><tr><th>' + t('table.court') + '</th><th>' + t('table.bench') + '</th><th>%</th><th>' + t('table.matches') + '</th><th>A</th><th>F</th><th>' + pointsLetter() + '</th></tr></thead>' +
+          '<thead><tr><th>' + t('table.court') + '</th><th>' + t('table.bench') + '</th><th>' + t('table.planPct') + '</th><th>' + t('table.matches') + '</th><th>A</th><th>F</th><th>' + pointsLetter() + '</th></tr></thead>' +
           '<tbody><tr>' +
             '<td>' + formatMmSs(d.totalCourt) + '</td>' +
             '<td>' + formatMmSs(d.totalBench) + '</td>' +
@@ -1750,117 +1825,16 @@
       var input = document.getElementById('edit-name-' + i);
       if (input && state.players[i]) state.players[i].name = input.value.trim() || t('default.playerN', { n: i + 1 });
     }
-    if (state.appMode === 'parent') {
-      persistCurrentParentSession();
-      if (state.appMode === 'parent') renderParentPlayerList();
-    } else if (state.currentTeamId) {
+    if (state.currentTeamId) {
       var team = getTeamById(state.currentTeamId);
       if (team) {
         team.players = state.players.map(function (p) { return { id: p.id, name: p.name }; });
         saveTeams(state.teams);
       }
-      renderPlayerList();
     }
+    if (state.appMode === 'parent') renderParentPlayerList();
+    else renderPlayerList();
     modal.close();
-  }
-
-  function openNewParentModal() {
-    var modal = document.getElementById('modal-new-parent');
-    var nameEl = document.getElementById('input-parent-session-name');
-    var personsEl = document.getElementById('edit-parent-persons');
-    if (!modal || !nameEl || !personsEl) return;
-    var today = new Date();
-    nameEl.value = t('parent.sessionNamePlaceholder') || 'Träning ' + today.getDate() + '/' + (today.getMonth() + 1);
-    personsEl.innerHTML = '';
-    var row = document.createElement('div');
-    row.className = 'edit-name-row';
-    row.innerHTML = '<label for="parent-person-0">' + t('default.playerN', { n: 1 }) + '</label><input type="text" id="parent-person-0" data-index="0" value="" aria-label="' + escapeHtml(t('default.playerNameAria', { n: 1 })) + '">';
-    personsEl.appendChild(row);
-    modal.showModal();
-  }
-
-  function addParentModalPerson() {
-    var personsEl = document.getElementById('edit-parent-persons');
-    if (!personsEl) return;
-    var n = personsEl.querySelectorAll('input[type="text"]').length;
-    var row = document.createElement('div');
-    row.className = 'edit-name-row';
-    row.innerHTML = '<label for="parent-person-' + n + '">' + t('default.playerN', { n: n + 1 }) + '</label><input type="text" id="parent-person-' + n + '" data-index="' + n + '" value="" aria-label="' + escapeHtml(t('default.playerNameAria', { n: n + 1 })) + '">';
-    personsEl.appendChild(row);
-  }
-
-  function removeParentModalPerson() {
-    var personsEl = document.getElementById('edit-parent-persons');
-    if (!personsEl) return;
-    var rows = personsEl.querySelectorAll('.edit-name-row');
-    if (rows.length <= 1) return;
-    rows[rows.length - 1].remove();
-  }
-
-  function startParentSessionFromModal() {
-    var nameEl = document.getElementById('input-parent-session-name');
-    var personsEl = document.getElementById('edit-parent-persons');
-    var modal = document.getElementById('modal-new-parent');
-    if (!nameEl || !personsEl || !modal) return;
-    var name = nameEl.value.trim() || t('parent.title');
-    var inputs = personsEl.querySelectorAll('input[type="text"]');
-    var players = [];
-    inputs.forEach(function (inp, i) {
-      var n = inp.value.trim() || t('default.playerN', { n: i + 1 });
-      players.push({ id: 'p' + (i + 1), name: n });
-    });
-    if (players.length === 0) players = [{ id: 'p1', name: t('default.playerN', { n: 1 }) }];
-    var id = 'parent_' + Date.now();
-    var dateISO = new Date().toISOString();
-    var session = {
-      id: id,
-      name: name,
-      dateISO: dateISO,
-      matchSeconds: 0,
-      matchElapsedMs: 0,
-      matchRunning: false,
-      matchStartTime: null,
-      players: players.map(function (p) {
-        return {
-          playerId: p.id,
-          playerNameAtTime: p.name,
-          secondsOnCourt: 0,
-          assists: 0,
-          fouls: 0,
-          goals: 0,
-          shots: 0,
-          madeShots: 0,
-          rebounds: 0
-        };
-      })
-    };
-    state.parentSessions = loadParentSessions();
-    state.parentSessions.unshift(session);
-    saveParentSessions(state.parentSessions);
-    loadParentSessionIntoState(session);
-    modal.close();
-    renderParentView();
-  }
-
-  function saveCurrentParentAndExit() {
-    persistCurrentParentSession();
-    pauseMatch();
-    state.currentParentSessionId = null;
-    state.currentMatchName = '';
-    state.currentMatchDateISO = '';
-    state.matchElapsedMs = 0;
-    state.matchStartTime = null;
-    state.players = [];
-    state.playerCourtSeconds = [];
-    state.playerOnCourtSince = [];
-    state.playerInMatch = [];
-    state.playerAssists = [];
-    state.playerFouls = [];
-    state.playerGoals = [];
-    state.playerShots = [];
-    state.playerMadeShots = [];
-    state.playerRebounds = [];
-    renderParentView();
   }
 
   // ---------- Avsluta match (spara data och stoppa klockan) ----------
@@ -1887,7 +1861,10 @@
         secondsOnCourt: getCourtSecondsForPlayer(i),
         assists: getPlayerAssists(i),
         fouls: getPlayerFouls(i),
-        goals: getPlayerGoals(i)
+        goals: getPlayerGoals(i),
+        shots: getPlayerShots(i),
+        madeShots: getPlayerMadeShots(i),
+        rebounds: getPlayerRebounds(i)
       });
     }
     saveOrUpdateMatch(match);
@@ -1906,7 +1883,8 @@
     state.playerAssists = [];
     state.playerFouls = [];
     state.playerGoals = [];
-    renderMatchPanel();
+    if (state.appMode === 'parent') renderParentView();
+    else renderMatchPanel();
     renderHistoryList();
     renderStatsList();
     updateOngoingMatchButton();
@@ -2058,7 +2036,6 @@
     state.teams = loadTeams();
     state.players = [];
     state.appMode = getAppMode();
-    state.parentSessions = loadParentSessions();
     ensureState();
 
     applyViewMode();
@@ -2127,7 +2104,8 @@
     updateMasterClockDisplay();
     setMatchStatusDisplay(false);
     setStartPauseButtonLabel(true);
-    renderMatchPanel();
+    if (state.appMode === 'parent') renderParentView();
+    else renderMatchPanel();
     renderHistoryList();
     renderStatsList();
     updateOngoingMatchButton();
@@ -2187,27 +2165,11 @@
       });
     }
 
-    var selectParentSession = document.getElementById('select-parent-session');
-    if (selectParentSession) selectParentSession.addEventListener('change', function () {
-      var id = selectParentSession.value;
-      if (!id) return;
-      var session = null;
-      for (var i = 0; i < state.parentSessions.length; i++) {
-        if (state.parentSessions[i].id === id) { session = state.parentSessions[i]; break; }
-      }
-      if (session) {
-        loadParentSessionIntoState(session);
-        renderParentView();
-      }
-    });
-    if ((el = document.getElementById('btn-new-parent-session'))) el.addEventListener('click', function () {
-      openNewParentModal();
-    });
     if ((el = document.getElementById('btn-parent-start-pause'))) el.addEventListener('click', function () {
       if (state.matchRunning) pauseMatch(); else startMatch();
       setParentStartPauseLabel(state.matchRunning ? false : true);
     });
-    if ((el = document.getElementById('btn-parent-save'))) el.addEventListener('click', saveCurrentParentAndExit);
+    if ((el = document.getElementById('btn-parent-save'))) el.addEventListener('click', saveCurrentMatch);
     if ((el = document.getElementById('btn-parent-reset'))) el.addEventListener('click', function () { resetMatch(); });
     if ((el = document.getElementById('btn-parent-new'))) el.addEventListener('click', function () { startNewMatch(); });
     if ((el = document.getElementById('btn-parent-edit-names'))) el.addEventListener('click', openEditNamesModal);
@@ -2220,19 +2182,19 @@
       });
       modalParentMenu.addEventListener('close', function () { btnParentMenu.setAttribute('aria-expanded', 'false'); });
       if ((el = document.getElementById('btn-parent-menu-edit-names'))) el.addEventListener('click', function () { modalParentMenu.close(); openEditNamesModal(); });
-      if ((el = document.getElementById('btn-parent-menu-save'))) el.addEventListener('click', function () { modalParentMenu.close(); saveCurrentParentAndExit(); });
+      if ((el = document.getElementById('btn-parent-menu-save'))) el.addEventListener('click', function () { modalParentMenu.close(); saveCurrentMatch(); });
       if ((el = document.getElementById('btn-parent-menu-reset'))) el.addEventListener('click', function () { modalParentMenu.close(); resetMatch(); });
       if ((el = document.getElementById('btn-parent-menu-new'))) el.addEventListener('click', function () { modalParentMenu.close(); startNewMatch(); });
       if ((el = document.getElementById('btn-close-parent-menu'))) el.addEventListener('click', function () { modalParentMenu.close(); });
     }
-    if ((el = document.getElementById('btn-parent-add-person'))) el.addEventListener('click', addParentModalPerson);
-    if ((el = document.getElementById('btn-parent-remove-person'))) el.addEventListener('click', removeParentModalPerson);
-    if ((el = document.getElementById('btn-parent-session-start'))) el.addEventListener('click', startParentSessionFromModal);
 
     if ((el = document.getElementById('btn-add-team'))) el.addEventListener('click', function () { openEditTeamModal(null); });
+    if ((el = document.getElementById('btn-new-player'))) el.addEventListener('click', openAddPlayerModal);
     if ((el = document.getElementById('btn-save-team'))) el.addEventListener('click', saveTeamFromModal);
     if ((el = document.getElementById('btn-add-player'))) el.addEventListener('click', addTeamModalPlayer);
     if ((el = document.getElementById('btn-remove-player'))) el.addEventListener('click', removeTeamModalPlayer);
+    if ((el = document.getElementById('btn-add-player-cancel'))) el.addEventListener('click', function () { document.getElementById('modal-add-player').close(); });
+    if ((el = document.getElementById('btn-add-player-save'))) el.addEventListener('click', saveNewPlayerFromModal);
 
     if ((el = document.getElementById('btn-close-edit-names'))) el.addEventListener('click', closeEditNamesModal);
     if ((el = document.getElementById('modal-edit-names'))) el.addEventListener('cancel', closeEditNamesModal);
