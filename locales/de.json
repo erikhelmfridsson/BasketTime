@@ -104,6 +104,7 @@
   "teams.ariaEdit": "Team bearbeiten",
   "teams.ariaDelete": "Team löschen",
   "teams.playersCount": "{{count}} Spieler",
+  "teams.errorSave": "Team konnte nicht gespeichert werden. Netzwerk prüfen und erneut versuchen.",
 
   "ongoing.button": "Laufendes Spiel",
   "ongoing.aria": "Zum laufenden Spiel",
@@ -114,7 +115,8 @@
   "history.duration": "Dauer:",
 
   "stats.filterByTeam": "Nach Team filtern",
-  "stats.filterTeamAria": "Teams auswählen",
+  "stats.filterTeamAria": "Team oder Elternansicht wählen",
+  "stats.parentView": "Elternansicht",
   "stats.empty": "Noch keine Statistik. Speichere mindestens ein Spiel.",
   "stats.showChart": "Grafik anzeigen",
   "stats.ariaShowChart": "Grafische Statistik anzeigen",

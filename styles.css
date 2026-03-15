@@ -94,7 +94,6 @@ body.app-logged-in .app-content {
   height: auto;
   object-fit: contain;
   object-position: center;
-  vertical-align: bottom;
 }
 
 .login-title {
@@ -307,12 +306,16 @@ body.view-mode-desktop .tab-btn {
   background: var(--on-court);
 }
 
-/* När matchvyn (pågående match) är öppen: dölj flikar */
+/* När matchvyn (pågående match) är öppen: dölj flikar, minska sidopadding */
 body.match-view-open .tab-nav {
   display: none;
 }
 body.match-view-open .header-clock {
   margin-bottom: 0;
+}
+body.match-view-open .main-content {
+  padding-left: 10px;
+  padding-right: 10px;
 }
 
 /* Vyväxlare Telefon / Dator (i inställningsmodalen) */
@@ -469,6 +472,13 @@ body.match-view-open .header-clock {
 }
 
 .tab-panel[hidden] {
+  display: none !important;
+}
+
+/* Match-panel: [hidden] ska alltid dölja (överstyr display: flex på t.ex. active-parent-wrap) */
+#panel-match .create-match-wrap[hidden],
+#panel-match .active-parent-wrap[hidden],
+#panel-match .active-match-wrap[hidden] {
   display: none !important;
 }
 
@@ -764,6 +774,10 @@ body.view-mode-phone .match-action-secondary {
 .team-item-actions {
   display: flex;
   gap: 8px;
+  flex-basis: 100%;
+  margin-top: 4px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
 }
 
 /* ----- Player list ----- */
@@ -888,7 +902,7 @@ body.view-mode-phone .match-action-secondary {
 .player-card .player-stats-row {
   display: flex;
   flex-wrap: wrap;
-  gap: 14px;
+  gap: 10px;
 }
 
 .player-card .player-stat {
@@ -896,7 +910,7 @@ body.view-mode-phone .match-action-secondary {
   min-width: 0;
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 4px;
 }
 
 .player-card .player-stat-label {
@@ -947,12 +961,12 @@ body.view-mode-phone .match-action-secondary {
 .player-card .player-stat-goals-value,
 .player-card .player-stat-shots-value,
 .player-card .player-stat-made-value {
-  flex: 0 0 2em;
-  min-width: 1.8em;
+  flex: 0 0 1.5em;
+  min-width: 1.2em;
   text-align: center;
   font-weight: 600;
   font-variant-numeric: tabular-nums;
-  padding: 0 4px;
+  padding: 0 2px;
 }
 
 .player-card .player-stat-pct-only {
@@ -1406,9 +1420,16 @@ body.view-mode-phone .parent-card-stat-row .parent-stat-btn-minus {
   cursor: default;
 }
 
-.stats-item .detail-table.stats-detail-table {
+.stats-table-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
   margin-top: 10px;
+  max-width: 100%;
+}
+
+.stats-item .detail-table.stats-detail-table {
   font-size: 0.85rem;
+  min-width: max-content;
 }
 
 .stats-item .stats-detail-table th,

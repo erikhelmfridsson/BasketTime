@@ -340,7 +340,7 @@
       state.playerOnCourtSince[index] = null;
     }
     if (state.appMode === 'parent') updateParentPlayerRow(index);
-    else updatePlayerRow(index);
+    else renderPlayerList();
   }
 
   // ---------- Visibility: pause when backgrounded ----------
@@ -458,14 +458,14 @@
   }
 
   function updateTeam(id, name, players) {
-    var t = getTeamById(id);
-    if (!t) return;
-    if (name !== undefined) t.name = name;
-    if (players !== undefined) t.players = players;
+    var team = getTeamById(id);
+    if (!team) return;
+    if (name !== undefined) team.name = name;
+    if (players !== undefined) team.players = players;
     if (apiState.loggedIn) {
       apiFetch('/api/teams/' + encodeURIComponent(id), {
         method: 'PUT',
-        body: { name: t.name, players: t.players }
+        body: { name: team.name, players: team.players }
       }).catch(function () {});
       return;
     }
@@ -476,7 +476,7 @@
     if (apiState.loggedIn) {
       apiFetch('/api/teams/' + encodeURIComponent(id), { method: 'DELETE' }).catch(function () {});
     }
-    state.teams = state.teams.filter(function (t) { return t.id !== id; });
+    state.teams = state.teams.filter(function (team) { return team.id !== id; });
     saveTeams(state.teams);
   }
 
@@ -651,30 +651,25 @@
     }
     var a = getPlayerAssists(index);
     var f = getPlayerFouls(index);
-    var g = getPlayerGoals(index);
     var shots = getPlayerShots(index);
     var made = getPlayerMadeShots(index);
     var pct = shots > 0 ? Math.round(100 * made / shots) + '%' : '–';
     var aVal = row.querySelector('.player-stat-assists-value');
     var fVal = row.querySelector('.player-stat-fouls-value');
-    var gVal = row.querySelector('.player-stat-goals-value');
     var sVal = row.querySelector('.player-stat-shots-value');
     var mVal = row.querySelector('.player-stat-made-value');
     var pctVal = row.querySelector('.player-stat-pct-value');
     if (aVal) aVal.textContent = a;
     if (fVal) fVal.textContent = f;
-    if (gVal) gVal.textContent = g;
     if (sVal) sVal.textContent = shots;
     if (mVal) mVal.textContent = made;
     if (pctVal) pctVal.textContent = pct;
     var aMinus = row.querySelector('.player-stat-assists-minus');
     var fMinus = row.querySelector('.player-stat-fouls-minus');
-    var gMinus = row.querySelector('.player-stat-goals-minus');
     var sMinus = row.querySelector('.player-stat-shots-minus');
     var mMinus = row.querySelector('.player-stat-made-minus');
     if (aMinus) aMinus.disabled = a <= 0;
     if (fMinus) fMinus.disabled = f <= 0;
-    if (gMinus) gMinus.disabled = g <= 0;
     if (sMinus) sMinus.disabled = shots <= 0;
     if (mMinus) mMinus.disabled = made <= 0;
   }
@@ -713,18 +708,20 @@
     var activeWrap = document.getElementById('active-match-wrap');
     var activeInfo = document.getElementById('active-match-info');
     var activeParentWrap = document.getElementById('active-parent-wrap');
-    if (activeParentWrap) activeParentWrap.hidden = true;
+    var ongoingWrap = document.getElementById('panel-history-ongoing-wrap');
+    if (activeParentWrap) { activeParentWrap.setAttribute('hidden', ''); }
+    if (activeWrap) { activeWrap.setAttribute('hidden', ''); }
+    if (ongoingWrap) { ongoingWrap.setAttribute('hidden', ''); }
     if (!createWrap || !activeWrap) return;
     if (!hasCurrentMatch()) {
-      createWrap.hidden = false;
-      activeWrap.hidden = true;
+      createWrap.removeAttribute('hidden');
       document.body.classList.remove('match-view-open');
       populateCreateMatchForm();
       updateOngoingMatchButton();
       return;
     }
-    createWrap.hidden = true;
-    activeWrap.hidden = false;
+    createWrap.setAttribute('hidden', '');
+    activeWrap.removeAttribute('hidden');
     document.body.classList.add('match-view-open');
     var dateStr = state.currentMatchDateISO ? new Date(state.currentMatchDateISO).toLocaleDateString(undefined, { dateStyle: 'short' }) : '';
     if (activeInfo) activeInfo.textContent = state.currentMatchName + (dateStr ? ' · ' + dateStr : '') + (state.currentTeamName ? ' · ' + state.currentTeamName : '');
@@ -739,18 +736,20 @@
     var createWrap = document.getElementById('create-match-wrap');
     var activeWrap = document.getElementById('active-match-wrap');
     var activeParentWrap = document.getElementById('active-parent-wrap');
-    if (activeWrap) activeWrap.hidden = true;
+    var ongoingWrap = document.getElementById('panel-history-ongoing-wrap');
+    if (activeWrap) { activeWrap.setAttribute('hidden', ''); }
+    if (activeParentWrap) { activeParentWrap.setAttribute('hidden', ''); }
+    if (ongoingWrap) { ongoingWrap.setAttribute('hidden', ''); }
     if (!createWrap || !activeParentWrap) return;
     if (!hasCurrentMatch()) {
-      createWrap.hidden = false;
-      activeParentWrap.hidden = true;
+      createWrap.removeAttribute('hidden');
       document.body.classList.remove('match-view-open');
       populateCreateMatchForm();
       updateOngoingMatchButton();
       return;
     }
-    createWrap.hidden = true;
-    activeParentWrap.hidden = false;
+    createWrap.setAttribute('hidden', '');
+    activeParentWrap.removeAttribute('hidden');
     document.body.classList.add('match-view-open');
     var dateStr = state.currentMatchDateISO ? state.currentMatchDateISO.slice(0, 10) : '';
     var infoEl = document.getElementById('active-parent-info');
@@ -928,6 +927,8 @@
             cb.className = 'create-match-player-cb';
             cb.setAttribute('data-player-id', item.id);
             cb.setAttribute('data-player-name', item.name);
+            if (item.teamId) cb.setAttribute('data-team-id', item.teamId);
+            if (item.teamName) cb.setAttribute('data-team-name', item.teamName);
             label.appendChild(cb);
             label.appendChild(document.createTextNode(item.name + teamStr));
             playersContainer.appendChild(label);
@@ -980,11 +981,13 @@
       checked.forEach(function (cb) {
         state.players.push({
           id: cb.getAttribute('data-player-id'),
-          name: cb.getAttribute('data-player-name')
+          name: cb.getAttribute('data-player-name'),
+          teamId: cb.getAttribute('data-team-id') || '',
+          teamName: cb.getAttribute('data-team-name') || ''
         });
       });
       state.currentTeamId = '';
-      state.currentTeamName = 'Föräldravy';
+      state.currentTeamName = PARENT_VIEW_TEAM_KEY;
     } else {
       var selectEl = document.getElementById('select-team');
       var teamId = selectEl ? selectEl.value : '';
@@ -1089,17 +1092,25 @@
     var legend = document.createElement('p');
     legend.className = 'team-view-legend';
     legend.setAttribute('aria-hidden', 'true');
-    legend.textContent = 'A ' + t('table.legendAssist') + ' · F ' + t('table.legendFoul') + ' · ' + pointsLetter() + ' ' + t('table.legendPoints') + ' · S ' + t('table.legendShots') + ' · T ' + t('table.legendMade');
+    legend.textContent = 'A ' + t('table.legendAssist') + ' · F ' + t('table.legendFoul') + ' · S ' + t('table.legendShots') + ' · T ' + t('table.legendMade');
     dom.playerList.appendChild(legend);
+    var indices = [];
     for (var i = 0; i < numPlayers(); i++) {
-      if (!state.playerInMatch[i]) continue;
+      if (state.playerInMatch[i]) indices.push(i);
+    }
+    indices.sort(function (a, b) {
+      var aOnCourt = state.playerOnCourtSince[a] !== null ? 1 : 0;
+      var bOnCourt = state.playerOnCourtSince[b] !== null ? 1 : 0;
+      return bOnCourt - aOnCourt;
+    });
+    for (var k = 0; k < indices.length; k++) {
+      var i = indices[k];
       var p = state.players[i] || { name: t('default.playerN', { n: i + 1 }) };
       var courtSec = getCourtSecondsForPlayer(i);
       var benchSec = getBenchSecondsForPlayer(i);
       var onCourt = state.playerOnCourtSince[i] !== null;
       var a = getPlayerAssists(i);
       var f = getPlayerFouls(i);
-      var g = getPlayerGoals(i);
       var shots = getPlayerShots(i);
       var made = getPlayerMadeShots(i);
       var pct = shots > 0 ? Math.round(100 * made / shots) + '%' : '–';
@@ -1120,12 +1131,10 @@
           '<div class="player-stats-row player-stats-row-1">' +
             '<div class="player-stat"><button type="button" class="player-stat-btn player-stat-assists-plus btn-touch" data-player-index="' + i + '" data-stat="assists" data-delta="1">A+</button><span class="player-stat-assists-value">' + a + '</span><button type="button" class="player-stat-btn player-stat-assists-minus btn-touch" data-player-index="' + i + '" data-stat="assists" data-delta="-1">A−</button></div>' +
             '<div class="player-stat"><button type="button" class="player-stat-btn player-stat-fouls-plus btn-touch" data-player-index="' + i + '" data-stat="fouls" data-delta="1">F+</button><span class="player-stat-fouls-value">' + f + '</span><button type="button" class="player-stat-btn player-stat-fouls-minus btn-touch" data-player-index="' + i + '" data-stat="fouls" data-delta="-1">F−</button></div>' +
-            '<div class="player-stat"><button type="button" class="player-stat-btn player-stat-goals-plus btn-touch" data-player-index="' + i + '" data-stat="goals" data-delta="1">' + pointsLetter() + '+</button><span class="player-stat-goals-value">' + g + '</span><button type="button" class="player-stat-btn player-stat-goals-minus btn-touch" data-player-index="' + i + '" data-stat="goals" data-delta="-1">' + pointsLetter() + '−</button></div>' +
           '</div>' +
           '<div class="player-stats-row player-stats-row-2">' +
             '<div class="player-stat"><button type="button" class="player-stat-btn player-stat-shots-plus btn-touch" data-player-index="' + i + '" data-stat="shots" data-delta="1">' + t('parent.shotsShort') + '+</button><span class="player-stat-shots-value">' + shots + '</span><button type="button" class="player-stat-btn player-stat-shots-minus btn-touch" data-player-index="' + i + '" data-stat="shots" data-delta="-1">' + t('parent.shotsShort') + '−</button></div>' +
             '<div class="player-stat"><button type="button" class="player-stat-btn player-stat-made-plus btn-touch" data-player-index="' + i + '" data-stat="madeShots" data-delta="1">' + t('parent.madeShort') + '+</button><span class="player-stat-made-value">' + made + '</span><button type="button" class="player-stat-btn player-stat-made-minus btn-touch" data-player-index="' + i + '" data-stat="madeShots" data-delta="-1">' + t('parent.madeShort') + '−</button></div>' +
-            '<div class="player-stat player-stat-pct-only"><span class="player-stat-label">%</span><span class="player-stat-pct-value">' + pct + '</span></div>' +
           '</div>' +
         '</div>';
       dom.playerList.appendChild(li);
@@ -1174,9 +1183,14 @@
       btns[i].setAttribute('aria-selected', active);
     }
     updateOngoingMatchButton();
+    var ongoingWrap = document.getElementById('panel-history-ongoing-wrap');
     if (panelId === 'panel-match') {
+      if (ongoingWrap) ongoingWrap.setAttribute('hidden', '');
       if (state.appMode === 'parent') renderParentView();
       else renderMatchPanel();
+    } else {
+      if (ongoingWrap && hasCurrentMatch()) ongoingWrap.removeAttribute('hidden');
+      else if (ongoingWrap) ongoingWrap.setAttribute('hidden', '');
     }
     if (panelId === 'panel-teams') renderTeamsList();
   }
@@ -1294,20 +1308,17 @@
     });
   }
 
-  /** Returnerar unika lag som förekommer i sparade matcher (för statistikfilter). */
+  /** Id för föräldravyn i filter (måste matcha teamNameAtTime när match sparas från föräldravy). */
+  var PARENT_VIEW_TEAM_KEY = 'Föräldravy';
+
+  /** Returnerar filteralternativ: alla lag + Föräldravy (så man kan välja lag eller föräldravy). */
   function getStatsTeamOptions() {
-    var matches = loadMatches();
-    var seen = {};
+    var teams = loadTeams();
     var options = [];
-    matches.forEach(function (m) {
-      var teamKey = m.teamId || m.teamNameAtTime || '';
-      if (teamKey && !seen[teamKey]) {
-        seen[teamKey] = true;
-        var team = getTeamById(teamKey);
-        var name = (m.teamNameAtTime && m.teamNameAtTime.trim()) ? m.teamNameAtTime : (team ? team.name : teamKey);
-        options.push({ id: teamKey, name: name });
-      }
+    teams.forEach(function (team) {
+      options.push({ id: team.id, name: team.name });
     });
+    options.push({ id: PARENT_VIEW_TEAM_KEY, name: t('stats.parentView') });
     options.sort(function (a, b) { return (a.name || '').localeCompare(b.name || ''); });
     return options;
   }
@@ -1328,9 +1339,11 @@
       (m.players || []).forEach(function (entry) {
         var playerId = entry.playerId || entry.playerNameAtTime;
         if (!playerId) return;
-        var key = teamKey + '|' + playerId;
+        var entryTeamKey = (entry.teamIdAtTime != null && entry.teamIdAtTime !== '') ? entry.teamIdAtTime : ((entry.teamNameAtTime != null && entry.teamNameAtTime.trim()) ? entry.teamNameAtTime : teamKey);
+        var entryTeamName = (entry.teamNameAtTime != null && entry.teamNameAtTime.trim()) ? entry.teamNameAtTime : (entryTeamKey === teamKey ? teamName : (getTeamById(entryTeamKey) ? getTeamById(entryTeamKey).name : entryTeamKey || teamName));
+        var key = entryTeamKey + '|' + playerId;
         if (!byPlayer[key]) {
-          byPlayer[key] = { totalCourt: 0, totalBench: 0, totalAssists: 0, totalFouls: 0, totalGoals: 0, matchesRecorded: 0, matchesPlayed: 0, courtSum: 0, pctSum: 0, teamName: teamName };
+          byPlayer[key] = { totalCourt: 0, totalBench: 0, totalAssists: 0, totalFouls: 0, totalGoals: 0, totalShots: 0, totalMadeShots: 0, matchesRecorded: 0, matchesPlayed: 0, courtSum: 0, pctSum: 0, teamName: entryTeamName };
         }
         var data = byPlayer[key];
         if (!data.playerName) data.playerName = entry.playerNameAtTime || playerId;
@@ -1341,6 +1354,8 @@
         data.totalAssists += entry.assists != null ? entry.assists : 0;
         data.totalFouls += entry.fouls != null ? entry.fouls : 0;
         data.totalGoals += entry.goals != null ? entry.goals : 0;
+        data.totalShots += entry.shots != null ? entry.shots : 0;
+        data.totalMadeShots += entry.madeShots != null ? entry.madeShots : 0;
         data.matchesRecorded += 1;
         if (court > 0) {
           data.matchesPlayed += 1;
@@ -1409,14 +1424,16 @@
       var d = item.data;
       var avgCourt = d.matchesPlayed > 0 ? Math.round(d.courtSum / d.matchesPlayed) : 0;
       var avgPct = d.matchesPlayed > 0 ? (d.pctSum / d.matchesPlayed).toFixed(1) : '0.0';
+      var shotPct = (d.totalShots || 0) > 0 ? (100 * (d.totalMadeShots || 0) / d.totalShots).toFixed(1) : '–';
       var teamStr = (d.teamName && d.teamName.trim()) ? d.teamName : '';
       var topLine = item.name + (teamStr ? ' · ' + teamStr : '');
       var div = document.createElement('div');
       div.className = 'stats-item history-item';
       div.innerHTML =
         '<span class="history-item-date">' + escapeHtml(topLine) + '</span>' +
+        '<div class="stats-table-scroll" role="region" aria-label="' + escapeHtml(t('table.statsAria') || 'Statistik') + '">' +
         '<table class="detail-table stats-detail-table" role="table">' +
-          '<thead><tr><th>' + t('table.court') + '</th><th>' + t('table.bench') + '</th><th>' + t('table.planPct') + '</th><th>' + t('table.matches') + '</th><th>A</th><th>F</th><th>' + pointsLetter() + '</th></tr></thead>' +
+          '<thead><tr><th>' + t('table.court') + '</th><th>' + t('table.bench') + '</th><th>' + t('table.planPct') + '</th><th>' + t('table.matches') + '</th><th>A</th><th>F</th><th>' + pointsLetter() + '</th><th>' + t('parent.shotsShort') + '</th><th>' + t('parent.madeShort') + '</th><th>' + t('table.shotPct') + '</th></tr></thead>' +
           '<tbody><tr>' +
             '<td>' + formatMmSs(d.totalCourt) + '</td>' +
             '<td>' + formatMmSs(d.totalBench) + '</td>' +
@@ -1425,7 +1442,10 @@
             '<td>' + (d.totalAssists || 0) + '</td>' +
             '<td>' + (d.totalFouls || 0) + '</td>' +
             '<td>' + (d.totalGoals || 0) + '</td>' +
-          '</tr></tbody></table>';
+            '<td>' + (d.totalShots || 0) + '</td>' +
+            '<td>' + (d.totalMadeShots || 0) + '</td>' +
+            '<td>' + (shotPct === '–' ? shotPct : shotPct + '%') + '</td>' +
+          '</tr></tbody></table></div>';
       container.appendChild(div);
     });
   }
@@ -1531,8 +1551,8 @@
     var innerH = h - padding.top - padding.bottom;
     var yTicks = [];
     var numTicks = 5;
-    for (var t = 0; t <= numTicks; t++) {
-      var vSec = Math.round((maxVal * t / numTicks));
+    for (var i = 0; i <= numTicks; i++) {
+      var vSec = Math.round((maxVal * i / numTicks));
       yTicks.push({
         y: padding.top + innerH - (vSec / maxVal) * innerH,
         label: formatMmSs(vSec)
@@ -1620,12 +1640,13 @@
     var sorted = getStatsData(state.statsTeamFilter);
     if (sorted.length === 0) return;
     var rows = [
-      [t('csv.statsPlayer'), t('csv.statsTeam'), t('csv.statsTotalCourt'), t('csv.statsTotalBench'), t('csv.statsMatchesRecorded'), t('csv.statsMatchesPlayed'), t('csv.statsAvgCourt'), t('csv.statsAvgPct'), t('csv.assists'), t('csv.fouls'), t('csv.goals')]
+      [t('csv.statsPlayer'), t('csv.statsTeam'), t('csv.statsTotalCourt'), t('csv.statsTotalBench'), t('csv.statsMatchesRecorded'), t('csv.statsMatchesPlayed'), t('csv.statsAvgCourt'), t('csv.statsAvgPct'), t('csv.assists'), t('csv.fouls'), t('csv.goals'), t('parent.shotsShort'), t('parent.madeShort'), t('table.shotPct')]
     ];
     sorted.forEach(function (item) {
       var d = item.data;
       var avgCourt = d.matchesPlayed > 0 ? Math.round(d.courtSum / d.matchesPlayed) : 0;
       var avgPct = d.matchesPlayed > 0 ? (d.pctSum / d.matchesPlayed).toFixed(1) : '0.0';
+      var shotPct = (d.totalShots || 0) > 0 ? (100 * (d.totalMadeShots || 0) / d.totalShots).toFixed(1) : '–';
       var teamStr = (d.teamName && d.teamName.trim()) ? d.teamName : '';
       rows.push([
         (item.name || '').replace(/"/g, '""'),
@@ -1638,7 +1659,10 @@
         avgPct,
         String(d.totalAssists || 0),
         String(d.totalFouls || 0),
-        String(d.totalGoals || 0)
+        String(d.totalGoals || 0),
+        String(d.totalShots || 0),
+        String(d.totalMadeShots || 0),
+        shotPct === '–' ? shotPct : shotPct + '%'
       ]);
     });
     var csv = rows.map(function (row) {
@@ -1710,6 +1734,7 @@
       nameEl.value = '';
       renderTeamPlayerFields(defaultTeamPlayers());
     }
+    setTeamModalError('');
     modal.showModal();
   }
 
@@ -1746,6 +1771,13 @@
     return out;
   }
 
+  function setTeamModalError(msg) {
+    var el = document.getElementById('modal-edit-team-error');
+    if (!el) return;
+    el.textContent = msg || '';
+    if (msg) el.removeAttribute('hidden'); else el.setAttribute('hidden', '');
+  }
+
   function saveTeamFromModal() {
     var nameEl = document.getElementById('input-team-name');
     var name = nameEl ? nameEl.value.trim() : '';
@@ -1753,6 +1785,7 @@
     var players = getTeamPlayerValuesFromModal();
     if (players.length === 0) players = [{ id: 'p1', name: t('default.playerN', { n: 1 }) }];
     function done() {
+      setTeamModalError('');
       document.getElementById('modal-edit-team').close();
       renderTeamsList();
       populateCreateMatchForm();
@@ -1762,7 +1795,14 @@
       done();
     } else {
       var result = addTeam(name, players);
-      if (result && typeof result.then === 'function') result.then(done); else done();
+      if (result && typeof result.then === 'function') {
+        result.then(function (team) {
+          if (team) done();
+          else setTeamModalError(t('teams.errorSave'));
+        }).catch(function () { setTeamModalError(t('teams.errorSave')); });
+      } else {
+        done();
+      }
     }
   }
 
@@ -1855,7 +1895,7 @@
     for (var i = 0; i < numPlayers(); i++) {
       if (!isPlayerInMatch(i)) continue;
       var p = state.players[i];
-      match.players.push({
+      var entry = {
         playerId: p ? p.id : ('p' + (i + 1)),
         playerNameAtTime: p ? p.name : t('default.playerN', { n: i + 1 }),
         secondsOnCourt: getCourtSecondsForPlayer(i),
@@ -1865,7 +1905,12 @@
         shots: getPlayerShots(i),
         madeShots: getPlayerMadeShots(i),
         rebounds: getPlayerRebounds(i)
-      });
+      };
+      if (p && (p.teamId || p.teamName)) {
+        entry.teamIdAtTime = p.teamId || '';
+        entry.teamNameAtTime = p.teamName || '';
+      }
+      match.players.push(entry);
     }
     saveOrUpdateMatch(match);
     pauseMatch();

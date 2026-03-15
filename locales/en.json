@@ -104,6 +104,7 @@
   "teams.ariaEdit": "Edit team",
   "teams.ariaDelete": "Delete team",
   "teams.playersCount": "{{count}} players",
+  "teams.errorSave": "Could not save team. Check the network and try again.",
 
   "ongoing.button": "Ongoing match",
   "ongoing.aria": "Go to ongoing match",
@@ -114,7 +115,8 @@
   "history.duration": "Duration:",
 
   "stats.filterByTeam": "Filter by team",
-  "stats.filterTeamAria": "Select teams",
+  "stats.filterTeamAria": "Select team or parent view",
+  "stats.parentView": "Parent view",
   "stats.empty": "No statistics yet. Save at least one match.",
   "stats.showChart": "Show chart",
   "stats.ariaShowChart": "Show chart view of statistics",

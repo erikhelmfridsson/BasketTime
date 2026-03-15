@@ -104,6 +104,7 @@
   "teams.ariaEdit": "Redigera lag",
   "teams.ariaDelete": "Radera lag",
   "teams.playersCount": "{{count}} spelare",
+  "teams.errorSave": "Kunde inte spara laget. Kontrollera nätverket och försök igen.",
 
   "ongoing.button": "Pågående match",
   "ongoing.aria": "Gå till pågående match",
@@ -114,7 +115,8 @@
   "history.duration": "Varaktighet:",
 
   "stats.filterByTeam": "Filtrera på lag",
-  "stats.filterTeamAria": "Välj lag",
+  "stats.filterTeamAria": "Välj lag eller föräldravy",
+  "stats.parentView": "Föräldravy",
   "stats.empty": "Ingen statistik ännu. Spara minst en match.",
   "stats.showChart": "Visa graf",
   "stats.ariaShowChart": "Visa grafisk statistik",
