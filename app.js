@@ -1193,6 +1193,15 @@
       else if (ongoingWrap) ongoingWrap.setAttribute('hidden', '');
     }
     if (panelId === 'panel-teams') renderTeamsList();
+    if (panelId === 'panel-history' || panelId === 'panel-stats') {
+      if (apiState.loggedIn && stateMatchesCache === null) {
+        loadMatchesFromApi().then(function (matches) {
+          stateMatchesCache = matches || [];
+          renderHistoryList();
+          renderStatsList();
+        }).catch(function () {});
+      }
+    }
   }
 
   function showMatchDetail(match) {
@@ -2138,7 +2147,7 @@
             apiFetch('/api/auth/logout', { method: 'POST' }).catch(function () {});
             apiState.available = false;
             apiState.loggedIn = false;
-            stateMatchesCache = null;
+            stateMatchesCache = null; // endast minnescache – anropar aldrig /api/matches/clear
           }
           clearStoredUser();
           showLoginHideApp();
@@ -2431,15 +2440,18 @@
             } else {
               refreshViews();
             }
-            Promise.all([loadTeamsFromApi(), loadMatchesFromApi()]).then(function (results) {
-              state.teams = normalizeTeams(results[0] || []);
-              stateMatchesCache = results[1] || [];
-              if (inited) refreshViews();
-            }).catch(function () {
-              state.teams = loadTeams();
-              stateMatchesCache = null;
-              if (inited) refreshViews();
-            });
+            // Kort fördröjning så att session-cookien hinner sparas (viktigt t.ex. Safari/iOS)
+            setTimeout(function () {
+              Promise.all([loadTeamsFromApi(), loadMatchesFromApi()]).then(function (results) {
+                state.teams = normalizeTeams(results[0] || []);
+                stateMatchesCache = results[1] || [];
+                if (inited) refreshViews();
+              }).catch(function () {
+                state.teams = loadTeams();
+                stateMatchesCache = null;
+                if (inited) refreshViews();
+              });
+            }, 100);
           });
         }
         return r.json().catch(function () { return {}; }).then(function (data) {
@@ -2485,15 +2497,17 @@
     checkApiSession().then(function (result) {
       if (result.ok) {
         finishRunInit();
-        Promise.all([loadTeamsFromApi(), loadMatchesFromApi()]).then(function (results) {
-          state.teams = normalizeTeams(results[0] || []);
-          stateMatchesCache = results[1] || [];
-          if (inited) refreshViews();
-        }).catch(function () {
-          state.teams = loadTeams();
-          stateMatchesCache = null;
-          if (inited) refreshViews();
-        });
+        setTimeout(function () {
+          Promise.all([loadTeamsFromApi(), loadMatchesFromApi()]).then(function (results) {
+            state.teams = normalizeTeams(results[0] || []);
+            stateMatchesCache = results[1] || [];
+            if (inited) refreshViews();
+          }).catch(function () {
+            state.teams = loadTeams();
+            stateMatchesCache = null;
+            if (inited) refreshViews();
+          });
+        }, 100);
         return;
       }
       if (result.status === 401) {

@@ -1,12 +1,28 @@
 """
 Matches API: list, create (save/update), get, delete.
+
+All historik (matchlista) och statistik i frontend baseras på dessa
+matcher, så om något går fel här loggar vi tydligt till stderr.
 """
+import logging
+import sys
+
 from flask import Blueprint, request
 
 from backend.auth import get_current_user, login_required
 from backend.models import Match, MatchPlayer, db
 
 bp = Blueprint("matches", __name__, url_prefix="/api/matches")
+
+logger = logging.getLogger("baskettime.matches")
+if not logger.handlers:
+    handler = logging.StreamHandler(sys.stderr)
+    formatter = logging.Formatter(
+        "[%(asctime)s] %(levelname)s in %(name)s: %(message)s"
+    )
+    handler.setFormatter(formatter)
+    logger.addHandler(handler)
+logger.setLevel(logging.INFO)
 
 
 def _match_to_response(m):
@@ -35,7 +51,16 @@ def _match_to_response(m):
 @login_required
 def list_matches():
     user = get_current_user()
-    matches = Match.query.filter_by(user_id=user.id).order_by(Match.created_at.desc()).all()
+    try:
+        matches = (
+            Match.query.filter_by(user_id=user.id)
+            .order_by(Match.created_at.desc())
+            .all()
+        )
+        logger.info("Loaded %s matches for user_id=%s", len(matches), user.id)
+    except Exception:
+        logger.exception("Failed to list matches for user_id=%s", user.id)
+        return {"error": "Could not load matches"}, 500
     return {"matches": [_match_to_response(m) for m in matches]}
 
 
@@ -54,42 +79,60 @@ def save_match():
     team_name_at_time = data.get("teamNameAtTime") or data.get("team_name_at_time") or ""
     players_data = data.get("players") or []
 
-    match = Match.query.filter_by(id=match_id, user_id=user.id).first()
-    if match:
-        match.name = name
-        match.date_iso = date_iso
-        match.match_seconds = match_seconds
-        match.team_id = team_id
-        match.team_name_at_time = team_name_at_time
-        for mp in match.players:
-            db.session.delete(mp)
-    else:
-        match = Match(
-            id=match_id,
-            user_id=user.id,
-            name=name,
-            date_iso=date_iso,
-            match_seconds=match_seconds,
-            team_id=team_id,
-            team_name_at_time=team_name_at_time,
-        )
-        db.session.add(match)
+    logger.info(
+        "Saving match id=%s for user_id=%s name=%r date_iso=%r players=%d",
+        match_id,
+        user.id,
+        name,
+        date_iso,
+        len(players_data),
+    )
 
-    for i, entry in enumerate(players_data):
-        if not isinstance(entry, dict):
-            continue
-        mp = MatchPlayer(
-            match_id=match_id,
-            ord=i,
-            player_id=str(entry.get("playerId", "p" + str(i + 1))),
-            player_name_at_time=str(entry.get("playerNameAtTime", "Spelare " + str(i + 1))),
-            seconds_on_court=int(entry.get("secondsOnCourt", 0)),
-            assists=int(entry.get("assists", 0)),
-            fouls=int(entry.get("fouls", 0)),
-            goals=int(entry.get("goals", 0)),
-        )
-        db.session.add(mp)
-    db.session.commit()
+    try:
+        match = Match.query.filter_by(id=match_id, user_id=user.id).first()
+        if match:
+            match.name = name
+            match.date_iso = date_iso
+            match.match_seconds = match_seconds
+            match.team_id = team_id
+            match.team_name_at_time = team_name_at_time
+            for mp in match.players:
+                db.session.delete(mp)
+        else:
+            match = Match(
+                id=match_id,
+                user_id=user.id,
+                name=name,
+                date_iso=date_iso,
+                match_seconds=match_seconds,
+                team_id=team_id,
+                team_name_at_time=team_name_at_time,
+            )
+            db.session.add(match)
+
+        for i, entry in enumerate(players_data):
+            if not isinstance(entry, dict):
+                continue
+            mp = MatchPlayer(
+                match_id=match_id,
+                ord=i,
+                player_id=str(entry.get("playerId", "p" + str(i + 1))),
+                player_name_at_time=str(
+                    entry.get("playerNameAtTime", "Spelare " + str(i + 1))
+                ),
+                seconds_on_court=int(entry.get("secondsOnCourt", 0)),
+                assists=int(entry.get("assists", 0)),
+                fouls=int(entry.get("fouls", 0)),
+                goals=int(entry.get("goals", 0)),
+            )
+            db.session.add(mp)
+        db.session.commit()
+        logger.info("Saved match id=%s for user_id=%s", match_id, user.id)
+    except Exception:
+        logger.exception("Failed to save match id=%s for user_id=%s", match_id, user.id)
+        db.session.rollback()
+        return {"error": "Could not save match"}, 500
+
     return _match_to_response(match), 201
 
 
@@ -97,7 +140,11 @@ def save_match():
 @login_required
 def get_match(match_id):
     user = get_current_user()
-    match = Match.query.filter_by(id=match_id, user_id=user.id).first()
+    try:
+        match = Match.query.filter_by(id=match_id, user_id=user.id).first()
+    except Exception:
+        logger.exception("Failed to load match id=%s for user_id=%s", match_id, user.id)
+        return {"error": "Could not load match"}, 500
     if not match:
         return {"error": "Match not found"}, 404
     return _match_to_response(match)
@@ -107,11 +154,19 @@ def get_match(match_id):
 @login_required
 def delete_match(match_id):
     user = get_current_user()
-    match = Match.query.filter_by(id=match_id, user_id=user.id).first()
-    if not match:
-        return {"error": "Match not found"}, 404
-    db.session.delete(match)
-    db.session.commit()
+    try:
+        match = Match.query.filter_by(id=match_id, user_id=user.id).first()
+        if not match:
+            return {"error": "Match not found"}, 404
+        db.session.delete(match)
+        db.session.commit()
+        logger.info("Deleted match id=%s for user_id=%s", match_id, user.id)
+    except Exception:
+        logger.exception(
+            "Failed to delete match id=%s for user_id=%s", match_id, user.id
+        )
+        db.session.rollback()
+        return {"error": "Could not delete match"}, 500
     return "", 204
 
 
@@ -119,6 +174,12 @@ def delete_match(match_id):
 @login_required
 def clear_all():
     user = get_current_user()
-    Match.query.filter_by(user_id=user.id).delete()
-    db.session.commit()
+    try:
+        deleted = Match.query.filter_by(user_id=user.id).delete()
+        db.session.commit()
+        logger.info("Cleared %s matches for user_id=%s", deleted, user.id)
+    except Exception:
+        logger.exception("Failed to clear matches for user_id=%s", user.id)
+        db.session.rollback()
+        return {"error": "Could not clear matches"}, 500
     return "", 204

@@ -47,6 +47,7 @@ def login():
 
 @bp.route("/logout", methods=["POST"])
 def logout():
+    # Endast session rensas. Inget användardata (lag, matcher, statistik) får raderas.
     session.clear()
     return {}, 204
 
