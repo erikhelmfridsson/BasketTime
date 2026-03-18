@@ -51,7 +51,9 @@ CREATE TABLE IF NOT EXISTS match_players (
     seconds_on_court INTEGER NOT NULL DEFAULT 0,
     assists INTEGER NOT NULL DEFAULT 0,
     fouls INTEGER NOT NULL DEFAULT 0,
-    goals INTEGER NOT NULL DEFAULT 0
+    goals INTEGER NOT NULL DEFAULT 0,
+    shots INTEGER NOT NULL DEFAULT 0,
+    made_shots INTEGER NOT NULL DEFAULT 0
 );
 
 CREATE INDEX IF NOT EXISTS ix_match_players_match_id ON match_players(match_id);

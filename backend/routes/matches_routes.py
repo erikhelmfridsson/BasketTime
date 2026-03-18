@@ -41,6 +41,8 @@ def _match_to_response(m):
                 "assists": p.assists,
                 "fouls": p.fouls,
                 "goals": p.goals,
+                "shots": getattr(p, "shots", 0),
+                "madeShots": getattr(p, "made_shots", 0),
             }
             for p in sorted(m.players, key=lambda x: x.ord)
         ],
@@ -124,6 +126,8 @@ def save_match():
                 assists=int(entry.get("assists", 0)),
                 fouls=int(entry.get("fouls", 0)),
                 goals=int(entry.get("goals", 0)),
+                shots=int(entry.get("shots", 0)),
+                made_shots=int(entry.get("madeShots", 0)),
             )
             db.session.add(mp)
         db.session.commit()

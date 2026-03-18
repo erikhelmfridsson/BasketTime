@@ -91,6 +91,8 @@ class MatchPlayer(db.Model):
     assists = Column(Integer, nullable=False, default=0)
     fouls = Column(Integer, nullable=False, default=0)
     goals = Column(Integer, nullable=False, default=0)
+    shots = Column(Integer, nullable=False, default=0)
+    made_shots = Column(Integer, nullable=False, default=0)
 
     def to_dict(self):
         return {
@@ -100,4 +102,6 @@ class MatchPlayer(db.Model):
             "assists": self.assists,
             "fouls": self.fouls,
             "goals": self.goals,
+            "shots": self.shots,
+            "madeShots": self.made_shots,
         }
