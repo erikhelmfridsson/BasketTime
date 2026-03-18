@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="description" content="Så använder du BasketTime – steg för steg guide till speltidsregistrering.">
+  <meta name="theme-color" content="#2b5a8a">
+  <title>Så använder du BasketTime – BasketTime</title>
+  <link rel="icon" type="image/png" href="assets/logo.png">
+  <style>
+    :root {
+      --lp-bg: #eef1f5;
+      --lp-card: #ffffff;
+      --lp-primary: #2b5a8a;
+      --lp-primary-hover: #1e4266;
+      --lp-text: #0d0d0d;
+      --lp-muted: #5c6574;
+      --lp-radius: 12px;
+      --lp-shadow: 0 2px 12px rgba(0,0,0,0.06);
+      --lp-safe-top: env(safe-area-inset-top);
+      --lp-safe-bottom: env(safe-area-inset-bottom);
+    }
+    *, *::before, *::after { box-sizing: border-box; }
+    html { font-size: 16px; -webkit-text-size-adjust: 100%; }
+    body {
+      margin: 0;
+      font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+      background: var(--lp-bg);
+      color: var(--lp-text);
+      line-height: 1.6;
+      min-height: 100vh;
+      padding: var(--lp-safe-top) 0 var(--lp-safe-bottom);
+      -webkit-font-smoothing: antialiased;
+    }
+    .lp-wrap { max-width: 720px; margin: 0 auto; padding: 24px 20px 48px; }
+    .lp-nav {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      justify-content: center;
+      margin-bottom: 24px;
+      font-size: 0.95rem;
+    }
+    .lp-nav a {
+      color: var(--lp-primary);
+      text-decoration: none;
+    }
+    .lp-nav a:hover { text-decoration: underline; }
+    .lp-back-link {
+      display: inline-block;
+      margin-bottom: 24px;
+      color: var(--lp-muted);
+      font-size: 0.9rem;
+      text-decoration: none;
+    }
+    .lp-back-link:hover { color: var(--lp-primary); text-decoration: underline; }
+    .lp-page-title {
+      font-size: 1.75rem;
+      font-weight: 700;
+      margin: 0 0 8px;
+      color: var(--lp-text);
+    }
+    .lp-section {
+      background: var(--lp-card);
+      border-radius: var(--lp-radius);
+      box-shadow: var(--lp-shadow);
+      padding: 24px;
+      margin-bottom: 20px;
+    }
+    .lp-section h2 {
+      margin: 0 0 12px;
+      font-size: 1.2rem;
+      font-weight: 600;
+      color: var(--lp-text);
+    }
+    .lp-section p { margin: 0 0 12px; }
+    .lp-section p:last-child { margin-bottom: 0; }
+    .lp-steps { list-style: none; padding: 0; margin: 0; }
+    .lp-steps li {
+      display: flex;
+      gap: 12px;
+      padding: 12px 0;
+      border-bottom: 1px solid rgba(0,0,0,0.06);
+    }
+    .lp-steps li:last-child { border-bottom: none; }
+    .lp-step-num {
+      flex-shrink: 0;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: var(--lp-primary);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 0.95rem;
+    }
+    .lp-cta {
+      display: inline-block;
+      margin-top: 16px;
+      padding: 14px 32px;
+      background: var(--lp-primary);
+      color: #fff !important;
+      font-size: 1rem;
+      font-weight: 600;
+      text-decoration: none;
+      border-radius: var(--lp-radius);
+    }
+    .lp-cta:hover { background: var(--lp-primary-hover); }
+    .lp-footer { text-align: center; padding: 24px 0; color: var(--lp-muted); font-size: 0.9rem; }
+    .lp-footer a { color: var(--lp-primary); text-decoration: none; }
+    @media (min-width: 500px) {
+      .lp-wrap { padding: 32px 24px 56px; }
+      .lp-page-title { font-size: 2rem; }
+      .lp-section { padding: 28px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="lp-wrap">
+    <nav class="lp-nav" aria-label="Sidnavigering">
+      <a href="landing.html">Startsida</a>
+      <a href="användning.html">Så använder du appen</a>
+      <a href="baskeregler.html">Baskeregler</a>
+      <a href="domartecken.html">Domartecken</a>
+    </nav>
+
+    <a href="landing.html" class="lp-back-link">← Tillbaka till startsidan</a>
+
+    <h1 class="lp-page-title">Så använder du BasketTime</h1>
+    <p style="color: var(--lp-muted); margin-bottom: 24px;">En tydlig guide från konto till färdig match och statistik.</p>
+
+    <section class="lp-section" aria-labelledby="h-konto">
+      <h2 id="h-konto">1. Skapa konto och logga in</h2>
+      <p>Öppna appen på <a href="https://baskettime.app/">baskettime.app</a>. Klicka på <strong>Skapa konto</strong>, ange användarnamn (minst 2 tecken) och lösenord (minst 6 tecken). Logga sedan in med samma uppgifter. Dina lag och matcher sparas i molnet och syns på alla enheter där du loggar in.</p>
+    </section>
+
+    <section class="lp-section" aria-labelledby="h-lag">
+      <h2 id="h-lag">2. Skapa lag och spelare</h2>
+      <p>Gå till fliken <strong>Lag</strong>. Klicka på <strong>Nytt lag</strong>, ge laget ett namn och lägg till spelare (upp till 11). Du kan redigera eller ta bort lag när som helst. Alla spelare som ska kunna spela matchen måste finnas i det lag du väljer.</p>
+    </section>
+
+    <section class="lp-section" aria-labelledby="h-match">
+      <h2 id="h-match">3. Starta en match</h2>
+      <ul class="lp-steps">
+        <li>
+          <span class="lp-step-num" aria-hidden="true">1</span>
+          <div>
+            <strong>Ny match</strong> – Ange matchnamn och datum, välj vilket lag som spelar.
+          </div>
+        </li>
+        <li>
+          <span class="lp-step-num" aria-hidden="true">2</span>
+          <div>
+            <strong>Välj spelare</strong> – Kryssa i vilka spelare som deltar (minst en). Klicka på <strong>Starta tid</strong> när du är redo.
+          </div>
+        </li>
+        <li>
+          <span class="lp-step-num" aria-hidden="true">3</span>
+          <div>
+            <strong>Under matchen</strong> – Tryck på <strong>Plan</strong> / <strong>Bänk</strong> för varje spelare när de byter. Tiden räknas automatiskt. Registrera assists (A), fouls (F), mål (M), skott och träff med +/−-knapparna.
+          </div>
+        </li>
+        <li>
+          <span class="lp-step-num" aria-hidden="true">4</span>
+          <div>
+            <strong>Avsluta match</strong> – Öppna menyn (☰) och välj <strong>Avsluta match</strong>. Matchen sparas till historik och statistik.
+          </div>
+        </li>
+      </ul>
+    </section>
+
+    <section class="lp-section" aria-labelledby="h-historia">
+      <h2 id="h-historia">4. Historik och statistik</h2>
+      <p><strong>Historik</strong> – Lista över avslutade matcher. Klicka på en match för att se speltid och statistik per spelare. Här kan du också radera en match eller exportera till CSV.</p>
+      <p><strong>Statistik</strong> – Säsongstotals per spelare och lag: speltid på plan/bänk, assists, fouls, mål, skott och träff. Filtrera på lag och exportera till CSV.</p>
+    </section>
+
+    <section class="lp-section" aria-labelledby="h-mobil">
+      <h2 id="h-mobil">5. Mobil och hemskärm</h2>
+      <p>Öppna <strong>baskettime.app</strong> i Safari på iPhone. Tryck på <strong>Dela</strong> → <strong>Lägg till på hemskärmen</strong>. Då får du en ikon som en app – fungerar även offline efter första besök.</p>
+    </section>
+
+    <p style="text-align: center;">
+      <a href="https://baskettime.app/" class="lp-cta">Öppna BasketTime</a>
+    </p>
+
+    <footer class="lp-footer">
+      <a href="landing.html">Startsida</a> · <a href="baskeregler.html">Baskeregler</a> · <a href="domartecken.html">Domartecken</a> · BasketTime 1.0
+    </footer>
+  </div>
+</body>
+</html>

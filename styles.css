@@ -1900,6 +1900,24 @@ body.theme-yellow {
   color: var(--text-muted);
 }
 
+.settings-links {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.settings-link {
+  font-size: 0.95rem;
+  color: var(--primary);
+  text-decoration: none;
+}
+
+.settings-link:hover,
+.settings-link:focus-visible {
+  text-decoration: underline;
+}
+
 .modal-actions {
   display: flex;
   gap: 10px;

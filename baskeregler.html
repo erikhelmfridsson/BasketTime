@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="description" content="Basketregler – komplett guide. Poäng, lag, matchtid, anfall, försvar, fouls och fair play.">
+  <meta name="theme-color" content="#2b5a8a">
+  <title>Baskeregler – BasketTime</title>
+  <link rel="icon" type="image/png" href="assets/logo.png">
+  <style>
+    :root {
+      --lp-bg: #eef1f5;
+      --lp-card: #ffffff;
+      --lp-primary: #2b5a8a;
+      --lp-primary-hover: #1e4266;
+      --lp-text: #0d0d0d;
+      --lp-muted: #5c6574;
+      --lp-radius: 12px;
+      --lp-shadow: 0 2px 12px rgba(0,0,0,0.06);
+      --lp-safe-top: env(safe-area-inset-top);
+      --lp-safe-bottom: env(safe-area-inset-bottom);
+    }
+    *, *::before, *::after { box-sizing: border-box; }
+    html { font-size: 16px; -webkit-text-size-adjust: 100%; }
+    body {
+      margin: 0;
+      font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+      background: var(--lp-bg);
+      color: var(--lp-text);
+      line-height: 1.6;
+      min-height: 100vh;
+      padding: var(--lp-safe-top) 0 var(--lp-safe-bottom);
+      -webkit-font-smoothing: antialiased;
+    }
+    .lp-wrap { max-width: 720px; margin: 0 auto; padding: 24px 20px 48px; }
+    .lp-nav {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      justify-content: center;
+      margin-bottom: 24px;
+      font-size: 0.95rem;
+    }
+    .lp-nav a {
+      color: var(--lp-primary);
+      text-decoration: none;
+    }
+    .lp-nav a:hover { text-decoration: underline; }
+    .lp-back-link {
+      display: inline-block;
+      margin-bottom: 24px;
+      color: var(--lp-muted);
+      font-size: 0.9rem;
+      text-decoration: none;
+    }
+    .lp-back-link:hover { color: var(--lp-primary); text-decoration: underline; }
+    .lp-page-title {
+      font-size: 1.75rem;
+      font-weight: 700;
+      margin: 0 0 8px;
+      color: var(--lp-text);
+    }
+    .lp-section {
+      background: var(--lp-card);
+      border-radius: var(--lp-radius);
+      box-shadow: var(--lp-shadow);
+      padding: 24px;
+      margin-bottom: 20px;
+    }
+    .lp-section h2 {
+      margin: 0 0 12px;
+      font-size: 1.2rem;
+      font-weight: 600;
+      color: var(--lp-text);
+    }
+    .lp-section p { margin: 0 0 12px; }
+    .lp-section p:last-child { margin-bottom: 0; }
+    .lp-section ul {
+      margin: 0 0 12px;
+      padding-left: 1.25rem;
+    }
+    .lp-section li { margin-bottom: 6px; }
+    .lp-section h3 { margin: 16px 0 8px; font-size: 1.05rem; font-weight: 600; color: var(--lp-text); }
+    .lp-section h3:first-of-type { margin-top: 0; }
+    .lp-summary {
+      background: rgba(43, 90, 138, 0.08);
+      border-radius: var(--lp-radius);
+      padding: 20px;
+      margin-top: 16px;
+    }
+    .lp-summary p { margin: 0 0 8px; }
+    .lp-summary p:last-child { margin-bottom: 0; }
+    .lp-footer { text-align: center; padding: 24px 0; color: var(--lp-muted); font-size: 0.9rem; }
+    .lp-footer a { color: var(--lp-primary); text-decoration: none; }
+    .lp-cta {
+      display: inline-block;
+      margin-top: 16px;
+      padding: 14px 32px;
+      background: var(--lp-primary);
+      color: #fff !important;
+      font-size: 1rem;
+      font-weight: 600;
+      text-decoration: none;
+      border-radius: var(--lp-radius);
+    }
+    .lp-cta:hover { background: var(--lp-primary-hover); }
+    @media (min-width: 500px) {
+      .lp-wrap { padding: 32px 24px 56px; }
+      .lp-page-title { font-size: 2rem; }
+      .lp-section { padding: 28px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="lp-wrap">
+    <nav class="lp-nav" aria-label="Sidnavigering">
+      <a href="landing.html">Startsida</a>
+      <a href="användning.html">Så använder du appen</a>
+      <a href="baskeregler.html">Baskeregler</a>
+      <a href="domartecken.html">Domartecken</a>
+    </nav>
+
+    <a href="landing.html" class="lp-back-link">← Tillbaka till startsidan</a>
+
+    <h1 class="lp-page-title">Basketregler – komplett guide</h1>
+    <p style="color: var(--lp-muted); margin-bottom: 24px;">En tydlig genomgång av basketregler. Officiella regler kan variera mellan FIBA, NBA och ungdomsbasket.</p>
+
+    <section class="lp-section" aria-labelledby="h-mal">
+      <h2 id="h-mal">Spelets mål</h2>
+      <p>Målet är att göra fler poäng än motståndaren genom att kasta bollen i deras korg.</p>
+      <ul>
+        <li><strong>2 poäng</strong> – skott innanför trepoängslinjen</li>
+        <li><strong>3 poäng</strong> – skott utanför trepoängslinjen</li>
+        <li><strong>1 poäng</strong> – straffkast</li>
+      </ul>
+    </section>
+
+    <section class="lp-section" aria-labelledby="h-lag">
+      <h2 id="h-lag">Lag och uppställning</h2>
+      <ul>
+        <li>2 lag med 5 spelare på planen samtidigt</li>
+        <li>Vanligtvis finns 7–12 spelare i truppen</li>
+        <li>Byten sker vid avblåsning (eller "flygande byten" i ungdomsbasket)</li>
+      </ul>
+      <h3>Positioner (förenklat)</h3>
+      <ul>
+        <li><strong>Guard</strong> – spelfördelare</li>
+        <li><strong>Forward</strong> – allround</li>
+        <li><strong>Center</strong> – nära korgen</li>
+      </ul>
+    </section>
+
+    <section class="lp-section" aria-labelledby="h-matchtid">
+      <h2 id="h-matchtid">Matchtid och struktur</h2>
+      <ul>
+        <li><strong>Seniorer:</strong> 4 × 10 minuter effektiv tid (FIBA)</li>
+        <li><strong>NBA:</strong> 4 × 12 minuter</li>
+        <li><strong>Ungdom:</strong> ofta kortare perioder</li>
+      </ul>
+      <h3>Regler</h3>
+      <ul>
+        <li>Klockan stoppas vid avblåsning</li>
+        <li>Halvtidspaus mellan period 2 och 3</li>
+        <li>Timeouts: lagen får ta pauser (antal varierar)</li>
+      </ul>
+    </section>
+
+    <section class="lp-section" aria-labelledby="h-start">
+      <h2 id="h-start">Matchstart och bollinnehav</h2>
+      <ul>
+        <li>Matchen startar med uppkast i mitten</li>
+        <li>Efter det används växelvis bollinnehav (possession arrow)</li>
+        <li>Efter varje poäng får motståndarlaget bollen</li>
+      </ul>
+    </section>
+
+    <section class="lp-section" aria-labelledby="h-anfall">
+      <h2 id="h-anfall">Anfallsregler</h2>
+      <h3>Dribbling och rörelse</h3>
+      <ul>
+        <li>Du måste dribbla för att förflytta dig med bollen</li>
+        <li>Du får ta två steg efter att du fångat bollen</li>
+      </ul>
+      <h3>Stegfel (travelling)</h3>
+      <ul>
+        <li>För många steg utan att dribbla</li>
+        <li>Felaktigt användande av pivotfot</li>
+      </ul>
+      <h3>Dubbeldribbling</h3>
+      <ul>
+        <li>Dribbla → stoppa → börja dribbla igen</li>
+        <li>Dribbla med båda händer samtidigt</li>
+      </ul>
+      <h3>24-sekundersregeln (skottklocka)</h3>
+      <ul>
+        <li>Anfallande lag har 24 sekunder på sig att skjuta</li>
+        <li>Bollen måste träffa ringen</li>
+        <li>(Ungdomsnivå kan ha längre tid eller ingen klocka)</li>
+      </ul>
+      <h3>8-sekundersregeln</h3>
+      <ul>
+        <li>Bollen måste över till anfallsplan inom 8 sekunder</li>
+      </ul>
+      <h3>3-sekundersregeln</h3>
+      <ul>
+        <li>Anfallande spelare får inte stå mer än 3 sekunder i zon (painten)</li>
+      </ul>
+      <h3>Tillbaka över halva planen (backcourt violation)</h3>
+      <ul>
+        <li>När bollen passerat mittlinjen får den inte spelas tillbaka</li>
+      </ul>
+    </section>
+
+    <section class="lp-section" aria-labelledby="h-forsvar">
+      <h2 id="h-forsvar">Försvar och fouls</h2>
+      <h3>Personliga fouls</h3>
+      <ul>
+        <li>Knuffa</li>
+        <li>Hålla fast</li>
+        <li>Slå på armar</li>
+        <li>Stoppa en spelare på ett otillåtet sätt</li>
+      </ul>
+      <h3>Straff för fouls</h3>
+      <ul>
+        <li>Inkast (vanligt)</li>
+        <li>Straffkast om skott störs</li>
+        <li>Efter ett visst antal lagfouls → bonus (straffkast)</li>
+      </ul>
+      <h3>Straffkast</h3>
+      <ul>
+        <li>Tas från strafflinjen</li>
+        <li>1, 2 eller 3 kast beroende på situation</li>
+      </ul>
+    </section>
+
+    <section class="lp-section" aria-labelledby="h-andra">
+      <h2 id="h-andra">Andra regelbrott</h2>
+      <h3>Out of bounds</h3>
+      <ul>
+        <li>Bollen går utanför planen → motståndarna får inkast</li>
+      </ul>
+      <h3>Goaltending / interference</h3>
+      <ul>
+        <li>Stoppa bollen på väg ner mot korgen</li>
+        <li>Röra ringen/bollen över korgen</li>
+      </ul>
+    </section>
+
+    <section class="lp-section" aria-labelledby="h-inkast">
+      <h2 id="h-inkast">Inkast och spelstart</h2>
+      <ul>
+        <li>Efter avblåsning sker inkast från sidlinje eller baslinje</li>
+        <li>Spelaren har 5 sekunder på sig att passa bollen</li>
+      </ul>
+    </section>
+
+    <section class="lp-section" aria-labelledby="h-sammanfattning">
+      <h2 id="h-sammanfattning">Snabb sammanfattning</h2>
+      <div class="lp-summary">
+        <p>• Dribbla när du rör dig</p>
+        <p>• Max 2 steg utan dribbling</p>
+        <p>• Skjut inom 24 sekunder</p>
+        <p>• Spela schysst</p>
+      </div>
+    </section>
+
+    <p style="text-align: center;">
+      <a href="https://baskettime.app/" class="lp-cta">Öppna BasketTime</a>
+    </p>
+
+    <footer class="lp-footer">
+      <a href="landing.html">Startsida</a> · <a href="användning.html">Så använder du appen</a> · <a href="domartecken.html">Domartecken</a> · BasketTime 1.0
+    </footer>
+  </div>
+</body>
+</html>

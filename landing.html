@@ -132,6 +132,19 @@
     }
     .lp-footer a { color: var(--lp-primary); text-decoration: none; }
     .lp-footer a:hover { text-decoration: underline; }
+    .lp-nav {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      justify-content: center;
+      margin-bottom: 24px;
+      font-size: 0.95rem;
+    }
+    .lp-nav a {
+      color: var(--lp-primary);
+      text-decoration: none;
+    }
+    .lp-nav a:hover { text-decoration: underline; }
     @media (min-width: 500px) {
       .lp-wrap { padding: 32px 24px 56px; }
       .lp-header { padding: 48px 0 56px; }
@@ -143,6 +156,13 @@
 </head>
 <body>
   <div class="lp-wrap">
+    <nav class="lp-nav" aria-label="Sidnavigering">
+      <a href="landing.html">Startsida</a>
+      <a href="användning.html">Så använder du appen</a>
+      <a href="baskeregler.html">Baskeregler</a>
+      <a href="domartecken.html">Domartecken</a>
+    </nav>
+
     <header class="lp-header">
       <img src="assets/logo.png" alt="BasketTime" class="lp-logo" width="200" height="67">
       <h1 class="lp-title">Speltidsregistrering för basket</h1>
@@ -196,7 +216,7 @@
     </p>
 
     <footer class="lp-footer">
-      BasketTime · Version 1.0
+      <a href="användning.html">Så använder du appen</a> · <a href="baskeregler.html">Baskeregler</a> · <a href="domartecken.html">Domartecken</a> · BasketTime 1.0
     </footer>
   </div>
 </body>

@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="description" content="Domartecken i basket – poäng, tid, administration och överträdelser.">
+  <meta name="theme-color" content="#2b5a8a">
+  <title>Domartecken – BasketTime</title>
+  <link rel="icon" type="image/png" href="assets/logo.png">
+  <style>
+    :root {
+      --lp-bg: #eef1f5;
+      --lp-card: #ffffff;
+      --lp-primary: #2b5a8a;
+      --lp-primary-hover: #1e4266;
+      --lp-text: #0d0d0d;
+      --lp-muted: #5c6574;
+      --lp-radius: 12px;
+      --lp-shadow: 0 2px 12px rgba(0,0,0,0.06);
+      --lp-safe-top: env(safe-area-inset-top);
+      --lp-safe-bottom: env(safe-area-inset-bottom);
+    }
+    *, *::before, *::after { box-sizing: border-box; }
+    html { font-size: 16px; -webkit-text-size-adjust: 100%; }
+    body {
+      margin: 0;
+      font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+      background: var(--lp-bg);
+      color: var(--lp-text);
+      line-height: 1.6;
+      min-height: 100vh;
+      padding: var(--lp-safe-top) 0 var(--lp-safe-bottom);
+      -webkit-font-smoothing: antialiased;
+    }
+    .lp-wrap { max-width: 720px; margin: 0 auto; padding: 24px 20px 48px; }
+    .lp-nav {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      justify-content: center;
+      margin-bottom: 24px;
+      font-size: 0.95rem;
+    }
+    .lp-nav a { color: var(--lp-primary); text-decoration: none; }
+    .lp-nav a:hover { text-decoration: underline; }
+    .lp-back-link {
+      display: inline-block;
+      margin-bottom: 24px;
+      color: var(--lp-muted);
+      font-size: 0.9rem;
+      text-decoration: none;
+    }
+    .lp-back-link:hover { color: var(--lp-primary); text-decoration: underline; }
+    .lp-page-title { font-size: 1.75rem; font-weight: 700; margin: 0 0 8px; color: var(--lp-text); }
+    .lp-section {
+      background: var(--lp-card);
+      border-radius: var(--lp-radius);
+      box-shadow: var(--lp-shadow);
+      padding: 24px;
+      margin-bottom: 20px;
+    }
+    .lp-section h2 { margin: 0 0 16px; font-size: 1.2rem; font-weight: 600; color: var(--lp-text); }
+    .lp-signal {
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+      padding: 10px 0;
+      border-bottom: 1px solid rgba(0,0,0,0.06);
+    }
+    .lp-signal:last-child { border-bottom: none; }
+    .lp-signal-num {
+      flex-shrink: 0;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: var(--lp-primary);
+      color: #fff;
+      font-size: 0.85rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .lp-signal strong { display: block; margin-bottom: 2px; }
+    .lp-signal span { color: var(--lp-muted); font-size: 0.9rem; }
+    .lp-footer { text-align: center; padding: 24px 0; color: var(--lp-muted); font-size: 0.9rem; }
+    .lp-footer a { color: var(--lp-primary); text-decoration: none; }
+    .lp-cta {
+      display: inline-block;
+      margin-top: 16px;
+      padding: 14px 32px;
+      background: var(--lp-primary);
+      color: #fff !important;
+      font-size: 1rem;
+      font-weight: 600;
+      text-decoration: none;
+      border-radius: var(--lp-radius);
+    }
+    .lp-cta:hover { background: var(--lp-primary-hover); }
+    @media (min-width: 500px) {
+      .lp-wrap { padding: 32px 24px 56px; }
+      .lp-page-title { font-size: 2rem; }
+      .lp-section { padding: 28px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="lp-wrap">
+    <nav class="lp-nav" aria-label="Sidnavigering">
+      <a href="landing.html">Startsida</a>
+      <a href="användning.html">Så använder du appen</a>
+      <a href="baskeregler.html">Baskeregler</a>
+      <a href="domartecken.html">Domartecken</a>
+    </nav>
+
+    <a href="landing.html" class="lp-back-link">← Tillbaka till startsidan</a>
+
+    <h1 class="lp-page-title">Domartecken</h1>
+    <p style="color: var(--lp-muted); margin-bottom: 24px;">Så signalerar domaren poäng, tid, byten och överträdelser i basket.</p>
+
+    <section class="lp-section" aria-labelledby="h-poang">
+      <h2 id="h-poang">I. Poäng</h2>
+      <div class="lp-signal">
+        <span class="lp-signal-num">1</span>
+        <div>
+          <strong>Ett poäng</strong>
+          <span>Ett finger, vifta med handleden.</span>
+        </div>
+      </div>
+      <div class="lp-signal">
+        <span class="lp-signal-num">2</span>
+        <div>
+          <strong>Två poäng</strong>
+          <span>Två fingrar, vifta med handleden.</span>
+        </div>
+      </div>
+      <div class="lp-signal">
+        <span class="lp-signal-num">3</span>
+        <div>
+          <strong>Trepoängsförsök</strong>
+          <span>En arm lyft, tre fingrar utsträckta.</span>
+        </div>
+      </div>
+      <div class="lp-signal">
+        <span class="lp-signal-num">4</span>
+        <div>
+          <strong>Tre poäng godkänns</strong>
+          <span>Båda armarna lyfta, tre fingrar (utsträckta) på varje hand.</span>
+        </div>
+      </div>
+      <div class="lp-signal">
+        <span class="lp-signal-num">5</span>
+        <div>
+          <strong>Mål räknas inte</strong>
+          <span>Saxrörelse med armarna framför kroppen.</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="lp-section" aria-labelledby="h-tid">
+      <h2 id="h-tid">II. Tidsrelaterade</h2>
+      <div class="lp-signal">
+        <span class="lp-signal-num">6</span>
+        <div>
+          <strong>Stoppa klockan (samtidig signal) eller starta inte klockan</strong>
+          <span>Öppen hand, en arm lyft rakt upp.</span>
+        </div>
+      </div>
+      <div class="lp-signal">
+        <span class="lp-signal-num">7</span>
+        <div>
+          <strong>Stoppa klockan för foul</strong>
+          <span>Ena handen knuten, andra med handflatan nedåt, peka på midjan.</span>
+        </div>
+      </div>
+      <div class="lp-signal">
+        <span class="lp-signal-num">8</span>
+        <div>
+          <strong>Starta matchklockan</strong>
+          <span>Hackrörelse med handen från lyft position nedåt.</span>
+        </div>
+      </div>
+      <div class="lp-signal">
+        <span class="lp-signal-num">9</span>
+        <div>
+          <strong>Återställ 24-sekundersklockan</strong>
+          <span>Rotera handen med utsträckt finger.</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="lp-section" aria-labelledby="h-admin">
+      <h2 id="h-admin">III. Administration</h2>
+      <div class="lp-signal">
+        <span class="lp-signal-num">10</span>
+        <div>
+          <strong>Spelarbyte (samtidig signal)</strong>
+          <span>Korslagda armar framför bröstet.</span>
+        </div>
+      </div>
+      <div class="lp-signal">
+        <span class="lp-signal-num">11</span>
+        <div>
+          <strong>Ge tillstånd att komma in</strong>
+          <span>Öppen hand, vinka mot kroppen.</span>
+        </div>
+      </div>
+      <div class="lp-signal">
+        <span class="lp-signal-num">12</span>
+        <div>
+          <strong>Begärd time-out (samtidig signal)</strong>
+          <span>Forma T med händerna, visa fingret mot handflatan.</span>
+        </div>
+      </div>
+      <div class="lp-signal">
+        <span class="lp-signal-num">13</span>
+        <div>
+          <strong>Kommunikation mellan domare och sekretariatet</strong>
+          <span>Tummen upp.</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="lp-section" aria-labelledby="h-overtradelser">
+      <h2 id="h-overtradelser">IV. Överträdelser</h2>
+      <div class="lp-signal">
+        <span class="lp-signal-num">15</span>
+        <div>
+          <strong>Stegfel (travelling)</strong>
+          <span>Rulla knytnävarna framför bröstet.</span>
+        </div>
+      </div>
+      <div class="lp-signal">
+        <span class="lp-signal-num">16</span>
+        <div>
+          <strong>Dribblingsfel (dubbeldribbling)</strong>
+          <span>Rörelse med armarna upp och ner, som att dribbla med båda händerna.</span>
+        </div>
+      </div>
+      <div class="lp-signal">
+        <span class="lp-signal-num">17</span>
+        <div>
+          <strong>Förning (carrying/palming)</strong>
+          <span>Rotera handen, halvt varv framåt.</span>
+        </div>
+      </div>
+      <div class="lp-signal">
+        <span class="lp-signal-num">18</span>
+        <div>
+          <strong>Tre sekunder</strong>
+          <span>Utsträckt arm, visa 3 fingrar.</span>
+        </div>
+      </div>
+      <div class="lp-signal">
+        <span class="lp-signal-num">19</span>
+        <div>
+          <strong>Fem sekunder</strong>
+          <span>Visa 5 fingrar.</span>
+        </div>
+      </div>
+      <div class="lp-signal">
+        <span class="lp-signal-num">20</span>
+        <div>
+          <strong>Åtta sekunder</strong>
+          <span>Visa 8 fingrar (fem på en hand, tre på den andra).</span>
+        </div>
+      </div>
+      <div class="lp-signal">
+        <span class="lp-signal-num">21</span>
+        <div>
+          <strong>Tjugofyra sekunder</strong>
+          <span>Fingrarna vidrör axeln.</span>
+        </div>
+      </div>
+      <div class="lp-signal">
+        <span class="lp-signal-num">22</span>
+        <div>
+          <strong>Bakåtspel (backcourt violation)</strong>
+          <span>Rör armen med utsträckt pekfinger fram och tillbaka.</span>
+        </div>
+      </div>
+      <div class="lp-signal">
+        <span class="lp-signal-num">23</span>
+        <div>
+          <strong>Spark (kicking)</strong>
+          <span>Peka på foten.</span>
+        </div>
+      </div>
+      <div class="lp-signal">
+        <span class="lp-signal-num">24</span>
+        <div>
+          <strong>Inkast och spelriktning</strong>
+          <span>Peka med fingret längs sidlinjen i spelriktning.</span>
+        </div>
+      </div>
+      <div class="lp-signal">
+        <span class="lp-signal-num">25</span>
+        <div>
+          <strong>Uppkastsituation (alternerande bollinnehav)</strong>
+          <span>Tummarna uppåt, följt av att peka fingret i samma riktning som pilen för alternerande bollinnehav.</span>
+        </div>
+      </div>
+    </section>
+
+    <p style="text-align: center;">
+      <a href="https://baskettime.app/" class="lp-cta">Öppna BasketTime</a>
+    </p>
+
+    <footer class="lp-footer">
+      <a href="landing.html">Startsida</a> · <a href="användning.html">Så använder du appen</a> · <a href="baskeregler.html">Baskeregler</a> · BasketTime 1.0
+    </footer>
+  </div>
+</body>
+</html>
