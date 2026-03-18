@@ -5,9 +5,12 @@ Serves static files and mounts /api for auth, teams, matches.
 import os
 import sys
 
-from flask import Flask, send_from_directory
+from flask import Flask, request, send_from_directory
 
 from backend.models import db
+
+# Domäner som ska visa landningssidan istället för appen (resten får index/app)
+LANDING_HOSTS = {"baskettime.se", "www.baskettime.se"}
 from backend.routes.auth_routes import bp as auth_bp
 from backend.routes.matches_routes import bp as matches_bp
 from backend.routes.teams_routes import bp as teams_bp
@@ -46,6 +49,9 @@ def create_app():
 
     @app.route("/")
     def index():
+        host = (request.host or "").split(":")[0].lower()
+        if host in LANDING_HOSTS:
+            return send_from_directory(".", "landing.html")
         return send_from_directory(".", "index.html")
 
     @app.route("/landing")
