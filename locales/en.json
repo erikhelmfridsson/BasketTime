@@ -2,7 +2,6 @@
   "app.title": "BasketTime",
   "app.description": "BasketTime – Basketball play time tracking",
   "app.version": "Version 1.0",
-
   "login.title": "Log in",
   "login.description": "Enter your details to access BasketTime.",
   "login.username": "Username",
@@ -17,7 +16,6 @@
   "login.errorInvalid": "Invalid username or password.",
   "login.errorRegister": "Could not create account. Please try again.",
   "login.errorPasswordLength": "Password must be at least 6 characters.",
-
   "nav.match": "Match",
   "nav.teams": "Teams",
   "nav.history": "History",
@@ -52,7 +50,6 @@
   "view.ariaGroup": "View app in phone or desktop mode",
   "view.ariaPhone": "Phone mode",
   "view.ariaDesktop": "Desktop mode",
-
   "createMatch.title": "New match",
   "createMatch.nameLabel": "Match name",
   "createMatch.namePlaceholder": "e.g. Home game 1",
@@ -76,7 +73,6 @@
   "teams.playerNamePlaceholder": "Name",
   "teams.addPlayerToTeam": "Add to team",
   "teams.addPlayerSave": "Add",
-
   "activeMatch.goToMatch": "Go to match",
   "activeMatch.startPause": "Start time",
   "activeMatch.stopPause": "Stop time",
@@ -95,7 +91,6 @@
   "activeMatch.ariaPlayerList": "Player list with play time",
   "status.running": "Running",
   "status.paused": "Paused",
-
   "teams.hint": "Create teams and add players. Then select a team when you start a new match.",
   "teams.empty": "No teams yet. Create a team below.",
   "teams.addTeam": "New team",
@@ -105,15 +100,12 @@
   "teams.ariaDelete": "Delete team",
   "teams.playersCount": "{{count}} players",
   "teams.errorSave": "Could not save team. Check the network and try again.",
-
   "ongoing.button": "Ongoing match",
   "ongoing.aria": "Go to ongoing match",
-
   "history.empty": "No matches saved yet.",
   "history.clearAll": "Clear all history",
   "history.ariaClearAll": "Clear entire season history",
   "history.duration": "Duration:",
-
   "stats.filterByTeam": "Filter by team",
   "stats.filterTeamAria": "Select team or parent view",
   "stats.parentView": "Parent view",
@@ -128,13 +120,11 @@
   "stats.backToStats": "Back to statistics",
   "stats.exportCsv": "Export CSV",
   "stats.ariaExportCsv": "Export statistics to CSV",
-
   "detail.back": "Back to history",
   "detail.exportCsv": "Export CSV",
   "detail.deleteMatch": "Delete match",
   "detail.ariaExportCsv": "Export match to CSV",
   "detail.ariaDeleteMatch": "Delete this match",
-
   "table.name": "Name",
   "table.court": "Court",
   "table.bench": "Bench",
@@ -162,7 +152,6 @@
   "player.ariaOnBench": "On bench",
   "player.plays": "{{name}} plays",
   "player.selectHint": "Select who plays in this match (at least one).",
-
   "modal.editNames.title": "Edit player names",
   "modal.editNames.close": "Close",
   "modal.team.title": "Team",
@@ -200,7 +189,6 @@
   "modal.cancel": "Cancel",
   "modal.clearAll": "Clear all",
   "modal.delete": "Delete",
-
   "default.myTeam": "My team",
   "default.team": "Team",
   "default.teamN": "Team {{n}}",
@@ -208,7 +196,6 @@
   "default.newTeam": "New team",
   "default.match": "Match",
   "default.playerNameAria": "Name player {{n}}",
-
   "csv.matchName": "Match name",
   "csv.matchDate": "Match date",
   "csv.team": "Team",
@@ -230,7 +217,8 @@
   "csv.statsMatchesPlayed": "Matches played",
   "csv.statsAvgCourt": "Avg court/match (mm:ss)",
   "csv.statsAvgPct": "Avg % played",
-
   "share.statsTitle": "BasketTime statistics",
-  "share.matchTitle": "BasketTime match"
+  "share.matchTitle": "BasketTime match",
+  "login.linkLanding": "Start page & guides (baskettime.se)",
+  "login.ariaLogoLink": "Go to start page baskettime.se"
 }

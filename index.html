@@ -8,6 +8,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="description" content="BasketTime – Speltidsregistrering för basket">
   <title>BasketTime</title>
+  <link rel="icon" type="image/png" href="assets/boll.png">
   <link rel="manifest" href="manifest.json">
   <link rel="stylesheet" href="styles.css">
 </head>
@@ -15,11 +16,16 @@
   <!-- Inloggningssida (visas när användaren inte är inloggad) -->
   <div id="login-screen" class="login-screen" aria-labelledby="login-title">
     <div class="login-card">
-      <div class="login-logo-wrap">
+      <a href="https://baskettime.se/landing" target="_blank" rel="noopener noreferrer" class="login-logo-wrap" data-i18n-aria-label="login.ariaLogoLink" aria-label="Gå till startsidan baskettime.se">
         <img src="assets/logo.png" alt="BasketTime" class="login-logo" width="240" height="80">
-      </div>
+      </a>
       <h1 id="login-title" class="login-title" data-i18n="login.title">Logga in</h1>
       <p class="login-description" data-i18n="login.description">Ange dina uppgifter för att komma åt BasketTime.</p>
+      <p class="login-links">
+        <a class="login-link" href="https://baskettime.se/landing" target="_blank" rel="noopener noreferrer" data-i18n="login.linkLanding">
+          Startsida &amp; guider (baskettime.se)
+        </a>
+      </p>
       <form id="login-form" class="login-form" novalidate>
         <label class="login-label" for="login-username">
           <span data-i18n="login.username">Användarnamn</span>

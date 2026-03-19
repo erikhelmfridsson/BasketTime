@@ -6,7 +6,7 @@
   <meta name="description" content="BasketTime – Speltidsregistrering för basket. Registrera speltid per spelare, följ statistik över säsongen och exportera till Excel.">
   <meta name="theme-color" content="#2b5a8a">
   <title>BasketTime – Speltidsregistrering för basket</title>
-  <link rel="icon" type="image/png" href="assets/logo.png">
+  <link rel="icon" type="image/png" href="assets/boll.png">
   <style>
     :root {
       --lp-bg: #eef1f5;
@@ -43,12 +43,23 @@
       text-align: center;
       padding: 32px 0 40px;
     }
+    .lp-logo-wrap {
+      overflow: hidden;
+      width: 70%;
+      max-width: 280px;
+      margin: 0 auto 16px;
+      line-height: 0;
+      text-align: center;
+      background: #1e3a5f;
+      padding: 14px 16px;
+      border-radius: 10px;
+    }
     .lp-logo {
       display: block;
-      margin: 0 auto 16px;
-      width: 200px;
+      width: 100%;
       height: auto;
-      max-width: 80%;
+      object-fit: contain;
+      object-position: center;
     }
     .lp-title {
       margin: 0 0 8px;
@@ -164,10 +175,12 @@
     </nav>
 
     <header class="lp-header">
-      <img src="assets/logo.png" alt="BasketTime" class="lp-logo" width="200" height="67">
+      <div class="lp-logo-wrap">
+        <img src="assets/logo.png" alt="BasketTime" class="lp-logo" width="240" height="80">
+      </div>
       <h1 class="lp-title">Speltidsregistrering för basket</h1>
       <p class="lp-tagline">Registrera speltid per spelare, följ statistik över säsongen och exportera till Excel.</p>
-      <a href="https://baskettime.app/" class="lp-cta">Öppna appen</a>
+      <a href="https://baskettime.app/" class="lp-cta">Öppna Baskettime</a>
     </header>
 
     <section class="lp-section" aria-labelledby="lp-features-heading">
@@ -184,14 +197,14 @@
           <span class="lp-icon" aria-hidden="true">👥</span>
           <div>
             <strong>Lag och spelare</strong>
-            <span>Skapa lag med upp till 11 spelare. Välj vilka som spelar innan matchen och byt mellan plan och bänk under matchen.</span>
+            <span>Skapa lag med valfritt antal spelare. Välj vilka som spelar innan matchen och byt mellan plan och bänk under matchen.</span>
           </div>
         </li>
         <li>
           <span class="lp-icon" aria-hidden="true">📊</span>
           <div>
             <strong>Statistik och historik</strong>
-            <span>Säsongsstatistik per spelare och lag. Assists, fouls och mål per match. Grafisk vy med stapel- och linjediagram.</span>
+            <span>Säsongsstatistik per spelare och lag. Assists, fouls, mål samt skott/träffar per match. Grafisk vy med stapel- och linjediagram.</span>
           </div>
         </li>
         <li>
@@ -212,7 +225,7 @@
     </section>
 
     <p style="text-align: center; margin-top: 24px;">
-      <a href="https://baskettime.app/" class="lp-cta">Öppna BasketTime</a>
+      <a href="https://baskettime.app/" class="lp-cta">Öppna Baskettime</a>
     </p>
 
     <footer class="lp-footer">

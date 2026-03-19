@@ -78,6 +78,7 @@ body.app-logged-in .app-content {
 }
 
 .login-logo-wrap {
+  display: block;
   overflow: hidden;
   width: 70%;
   margin: 0 auto 10px auto;
@@ -86,6 +87,14 @@ body.app-logged-in .app-content {
   background: #1e3a5f;
   padding: 14px 16px;
   border-radius: 10px;
+  text-decoration: none;
+  color: inherit;
+}
+
+a.login-logo-wrap:hover,
+a.login-logo-wrap:focus-visible {
+  opacity: 0.92;
+  text-decoration: none;
 }
 
 .login-logo {
@@ -109,6 +118,22 @@ body.app-logged-in .app-content {
   font-size: 0.9rem;
   color: #4a5568;
   text-align: center;
+}
+
+.login-links {
+  margin: -10px 0 18px 0;
+  text-align: center;
+}
+
+.login-link {
+  color: var(--primary);
+  text-decoration: none;
+  font-size: 0.95rem;
+}
+
+.login-link:hover,
+.login-link:focus-visible {
+  text-decoration: underline;
 }
 
 .login-form {

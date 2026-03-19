@@ -2,7 +2,6 @@
   "app.title": "BasketTime",
   "app.description": "BasketTime – Speltidsregistrering för basket",
   "app.version": "Version 1.0",
-
   "login.title": "Logga in",
   "login.description": "Ange dina uppgifter för att komma åt BasketTime.",
   "login.username": "Användarnamn",
@@ -17,7 +16,6 @@
   "login.errorInvalid": "Fel användarnamn eller lösenord.",
   "login.errorRegister": "Kunde inte skapa konto. Försök igen.",
   "login.errorPasswordLength": "Lösenord måste vara minst 6 tecken.",
-
   "nav.match": "Match",
   "nav.teams": "Lag",
   "nav.history": "Historik",
@@ -52,7 +50,6 @@
   "view.ariaGroup": "Visa appen i telefon- eller datorläge",
   "view.ariaPhone": "Telefonläge",
   "view.ariaDesktop": "Datorläge",
-
   "createMatch.title": "Ny match",
   "createMatch.nameLabel": "Matchnamn",
   "createMatch.namePlaceholder": "t.ex. Hemmamatch 1",
@@ -76,7 +73,6 @@
   "teams.playerNamePlaceholder": "Namn",
   "teams.addPlayerToTeam": "Lägg till i lag",
   "teams.addPlayerSave": "Lägg till",
-
   "activeMatch.goToMatch": "Gå till match",
   "activeMatch.startPause": "Starta tid",
   "activeMatch.stopPause": "Stoppa tid",
@@ -95,7 +91,6 @@
   "activeMatch.ariaPlayerList": "Spelarlista med speltid",
   "status.running": "Pågår",
   "status.paused": "Pausad",
-
   "teams.hint": "Skapa lag och lägg till spelare. Välj sedan lag när du startar en ny match.",
   "teams.empty": "Inga lag ännu. Skapa ett lag nedan.",
   "teams.addTeam": "Nytt lag",
@@ -105,15 +100,12 @@
   "teams.ariaDelete": "Radera lag",
   "teams.playersCount": "{{count}} spelare",
   "teams.errorSave": "Kunde inte spara laget. Kontrollera nätverket och försök igen.",
-
   "ongoing.button": "Pågående match",
   "ongoing.aria": "Gå till pågående match",
-
   "history.empty": "Inga matcher sparade ännu.",
   "history.clearAll": "Rensa all historik",
   "history.ariaClearAll": "Rensa hela säsongshistoriken",
   "history.duration": "Varaktighet:",
-
   "stats.filterByTeam": "Filtrera på lag",
   "stats.filterTeamAria": "Välj lag eller föräldravy",
   "stats.parentView": "Föräldravy",
@@ -128,13 +120,11 @@
   "stats.backToStats": "Tillbaka till statistik",
   "stats.exportCsv": "Exportera CSV",
   "stats.ariaExportCsv": "Exportera statistik till CSV",
-
   "detail.back": "Tillbaka till historik",
   "detail.exportCsv": "Exportera CSV",
   "detail.deleteMatch": "Radera match",
   "detail.ariaExportCsv": "Exportera match till CSV",
   "detail.ariaDeleteMatch": "Radera denna match",
-
   "table.name": "Namn",
   "table.court": "Plan",
   "table.bench": "Bänk",
@@ -162,7 +152,6 @@
   "player.ariaOnBench": "På bänk",
   "player.plays": "{{name}} spelar",
   "player.selectHint": "Välj vilka som spelar i denna match (minst en).",
-
   "modal.editNames.title": "Redigera spelarnamn",
   "modal.editNames.close": "Stäng",
   "modal.team.title": "Lag",
@@ -200,7 +189,6 @@
   "modal.cancel": "Avbryt",
   "modal.clearAll": "Rensa allt",
   "modal.delete": "Radera",
-
   "default.myTeam": "Mitt lag",
   "default.team": "Lag",
   "default.teamN": "Lag {{n}}",
@@ -208,7 +196,6 @@
   "default.newTeam": "Nytt lag",
   "default.match": "Match",
   "default.playerNameAria": "Namn spelare {{n}}",
-
   "csv.matchName": "Matchnamn",
   "csv.matchDate": "Matchdatum",
   "csv.team": "Lag",
@@ -230,7 +217,8 @@
   "csv.statsMatchesPlayed": "Matcher spelade",
   "csv.statsAvgCourt": "Snitt plan/match (mm:ss)",
   "csv.statsAvgPct": "Snitt % spelad",
-
   "share.statsTitle": "BasketTime statistik",
-  "share.matchTitle": "BasketTime match"
+  "share.matchTitle": "BasketTime match",
+  "login.linkLanding": "Startsida & guider (baskettime.se)",
+  "login.ariaLogoLink": "Gå till startsidan baskettime.se"
 }
