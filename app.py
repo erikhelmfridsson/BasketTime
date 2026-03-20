@@ -6,6 +6,7 @@ import os
 import sys
 
 from flask import Flask, request, send_from_directory
+from werkzeug.middleware.proxy_fix import ProxyFix
 
 from backend.models import db
 
@@ -38,6 +39,14 @@ def create_app():
     app.config["SESSION_COOKIE_HTTPONLY"] = True
     app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
     app.config["PERMANENT_SESSION_LIFETIME"] = 86400 * 7  # 7 days
+    # Render (och liknande) terminierar TLS framför appen; utan detta kan sessioncookies
+    # med Secure-flagga eller is_secure bli fel. Lokalt utan DATABASE_URL används HTTP.
+    if database_url:
+        app.wsgi_app = ProxyFix(
+            app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_port=1, x_prefix=1
+        )
+        app.config["SESSION_COOKIE_SECURE"] = True
+        app.config["PREFERRED_URL_SCHEME"] = "https"
 
     db.init_app(app)
     app.register_blueprint(auth_bp)

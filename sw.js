@@ -1,5 +1,5 @@
 /* BasketTime Service Worker – cache-first for offline. Öka CACHE_NAME vid ny deploy så att mobilen får nya filer. */
-var CACHE_NAME = 'baskettime-v5';
+var CACHE_NAME = 'baskettime-v6';
 var URLS = [
   './',
   './index.html',

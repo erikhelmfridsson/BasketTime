@@ -27,6 +27,25 @@
   // ---------- API (backend) state ----------
   var apiState = { available: false, loggedIn: false };
   var stateMatchesCache = null;
+  /** true under sessionkontroll (/api/auth/me) eller inloggningsförsök – visar gul status. */
+  var storageStatusChecking = false;
+
+  function updateStorageStatusIndicator() {
+    var badges = document.querySelectorAll('[data-storage-status-badge]');
+    if (!badges.length) return;
+    var mode = storageStatusChecking ? 'checking' : (apiState.loggedIn ? 'cloud' : 'offline');
+    var labelKey = mode === 'cloud' ? 'storageStatus.cloud' : (mode === 'offline' ? 'storageStatus.offline' : 'storageStatus.checking');
+    var helpKey = mode === 'cloud' ? 'storageStatus.cloudHelp' : (mode === 'offline' ? 'storageStatus.offlineHelp' : 'storageStatus.checkingHelp');
+    var text = t(labelKey);
+    var help = t(helpKey);
+    var aria = t('storageStatus.aria') + ': ' + text;
+    badges.forEach(function (badge) {
+      badge.className = 'storage-status-badge storage-status-badge--' + mode;
+      badge.textContent = text;
+      badge.title = help;
+      badge.setAttribute('aria-label', aria);
+    });
+  }
 
   function apiFetch(path, opts) {
     var base = (typeof window.BASKETTIME_API_BASE !== 'undefined' && window.BASKETTIME_API_BASE) ? window.BASKETTIME_API_BASE : '';
@@ -2063,6 +2082,7 @@
   }
 
   function refreshViews() {
+    updateStorageStatusIndicator();
     if (!window.i18n) return;
     applyViewMode();
     applyTheme();
@@ -2149,8 +2169,10 @@
             apiState.loggedIn = false;
             stateMatchesCache = null; // endast minnescache – anropar aldrig /api/matches/clear
           }
+          storageStatusChecking = false;
           clearStoredUser();
           showLoginHideApp();
+          updateStorageStatusIndicator();
         });
       }
     }
@@ -2398,6 +2420,8 @@
       submitBtn.textContent = loading ? t('login.loading') : t('login.submit');
     }
     if (registerBtn) registerBtn.disabled = loading;
+    storageStatusChecking = !!loading;
+    updateStorageStatusIndicator();
   }
 
   function showLoginError(msg) {
@@ -2490,12 +2514,18 @@
 
   function runInit() {
     if (!getStoredUser()) {
+      storageStatusChecking = false;
       showLoginHideApp();
       setupLoginForm();
+      updateStorageStatusIndicator();
       return;
     }
+    storageStatusChecking = true;
+    updateStorageStatusIndicator();
     checkApiSession().then(function (result) {
+      storageStatusChecking = false;
       if (result.ok) {
+        updateStorageStatusIndicator();
         finishRunInit();
         setTimeout(function () {
           Promise.all([loadTeamsFromApi(), loadMatchesFromApi()]).then(function (results) {
@@ -2514,15 +2544,25 @@
         clearStoredUser();
         showLoginHideApp();
         setupLoginForm();
+        updateStorageStatusIndicator();
         return;
       }
-      state.teams = loadTeams();
-      stateMatchesCache = null;
-      finishRunInit();
+      // Ingen giltig session men användarnamn finns i localStorage (t.ex. nätverk/5xx).
+      // Kör inte appen offline – då är apiState.loggedIn false och inget skrivs till databasen.
+      showLoginHideApp();
+      setupLoginForm();
+      showLoginError(result.status === 0 ? t('login.errorNetwork') : t('login.errorServer'));
+      var userElRetry = document.getElementById('login-username');
+      if (userElRetry && getStoredUser()) userElRetry.value = getStoredUser();
+      updateStorageStatusIndicator();
     }).catch(function () {
-      state.teams = loadTeams();
-      stateMatchesCache = null;
-      finishRunInit();
+      storageStatusChecking = false;
+      showLoginHideApp();
+      setupLoginForm();
+      showLoginError(t('login.errorNetwork'));
+      var userElCatch = document.getElementById('login-username');
+      if (userElCatch && getStoredUser()) userElCatch.value = getStoredUser();
+      updateStorageStatusIndicator();
     });
   }
 
@@ -2547,6 +2587,7 @@
 
   whenDomReady(runInit);
   document.addEventListener('i18n-ready', function () {
+    updateStorageStatusIndicator();
     if (inited) refreshViews();
     var current = window.i18n ? window.i18n.getLang() : 'sv';
     document.querySelectorAll('.settings-lang-btn').forEach(function (btn) {

@@ -15,6 +15,9 @@
 <body class="view-mode-phone">
   <!-- Inloggningssida (visas när användaren inte är inloggad) -->
   <div id="login-screen" class="login-screen" aria-labelledby="login-title">
+    <div class="login-storage-status" role="status" aria-live="polite">
+      <span class="storage-status-badge" data-storage-status-badge data-i18n-aria-label="storageStatus.aria" aria-label="Lagringsstatus"></span>
+    </div>
     <div class="login-card">
       <a href="https://baskettime.se/landing" target="_blank" rel="noopener noreferrer" class="login-logo-wrap" data-i18n-aria-label="login.ariaLogoLink" aria-label="Gå till startsidan baskettime.se">
         <img src="assets/logo.png" alt="BasketTime" class="login-logo" width="240" height="80">
@@ -46,11 +49,16 @@
     <!-- Sticky header: match clock + status -->
     <header class="app-header" role="banner">
       <div class="header-clock" aria-live="polite">
+        <div class="header-clock-top">
         <span id="master-clock" class="clock-display">00:00</span>
         <img src="assets/logo.png" alt="BasketTime" class="header-logo">
         <button type="button" id="btn-settings" class="btn-settings btn-icon" data-i18n-aria-label="settings.aria" aria-label="Inställningar" title="Inställningar">
           <svg class="icon-gear" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
         </button>
+        </div>
+        <div class="header-storage-status" role="status" aria-live="polite">
+          <span class="storage-status-badge" data-storage-status-badge data-i18n-aria-label="storageStatus.aria" aria-label="Lagringsstatus"></span>
+        </div>
       </div>
       <nav class="tab-nav" role="navigation" data-i18n-aria-label="nav.aria" aria-label="Huvudnavigering">
         <button type="button" class="tab-btn active" data-tab="match" aria-selected="true" aria-controls="panel-match" data-i18n="nav.match">Match</button>

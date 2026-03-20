@@ -46,8 +46,10 @@ body {
 /* Inloggningssida – mörkblå tema kring loggan */
 .login-screen {
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
+  gap: 0;
   min-height: 100vh;
   min-height: 100dvh;
   padding: 24px;
@@ -252,14 +254,75 @@ body.view-mode-desktop .tab-btn {
 }
 
 .header-clock {
-  display: grid;
-  grid-template-columns: auto 1fr auto;
-  align-items: center;
-  gap: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
   margin-bottom: 12px;
   padding: 10px 12px;
   background: #1e3a5f;
   border-radius: var(--radius) var(--radius) 0 0;
+}
+
+.header-clock-top {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 10px 12px;
+}
+
+.header-storage-status {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+}
+
+.login-storage-status {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  max-width: 420px;
+  margin: 0 auto 12px;
+  padding: 0 16px;
+}
+
+.storage-status-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  max-width: 100%;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  line-height: 1.25;
+  text-align: center;
+  border: 1px solid transparent;
+  cursor: default;
+}
+
+.storage-status-badge--cloud {
+  background: rgba(46, 125, 50, 0.2);
+  color: #1b5e20;
+  border-color: rgba(46, 125, 50, 0.45);
+}
+
+.storage-status-badge--offline {
+  background: rgba(198, 40, 40, 0.15);
+  color: #b71c1c;
+  border-color: rgba(198, 40, 40, 0.4);
+}
+
+.storage-status-badge--checking {
+  background: rgba(245, 124, 0, 0.18);
+  color: #e65100;
+  border-color: rgba(245, 124, 0, 0.45);
+}
+
+body.view-mode-desktop .storage-status-badge {
+  font-size: 0.85rem;
+  padding: 7px 14px;
 }
 
 .header-clock .clock-display {
