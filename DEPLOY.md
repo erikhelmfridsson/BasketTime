@@ -1,5 +1,7 @@
 # Ladda upp till GitHub och Render
 
+Översikt över all dokumentation: [DOCS.md](./DOCS.md). Drift-checklista: [TODO.md](./TODO.md).
+
 ## Steg 1: Spara och pusha till GitHub
 
 Kör i terminalen från projektmappen `PlayTime`:
@@ -21,13 +23,13 @@ git remote -v
 ```
 Om det inte står någon `origin`, koppla till ditt repo:
 ```powershell
-git remote add origin https://github.com/DITT-ANVANDARNAMME/DITT-REPO-NAMN.git
+git remote add origin https://github.com/DITT-ANVÄNDARNAMN/DITT-REPO-NAMN.git
 ```
 
 Om du får **autentiseringsfel** vid push:
 - GitHub accepterar inte längre lösenord för git över HTTPS. Använd antingen:
   - **Personal Access Token (PAT):** GitHub → Settings → Developer settings → Personal access tokens. Skapa en token med scope `repo`. Använd token som lösenord när `git push` frågar.
-  - **SSH:** Sätt upp SSH-nyckel och använd en URL som `git@github.com:användare/repo.git`.
+  - **SSH:** Sätt upp SSH-nyckel och använd en URL som `git@github.com:användarnamn/repo.git`.
 
 ---
 
@@ -40,9 +42,11 @@ Om du får **autentiseringsfel** vid push:
 3. **Manuell deploy:** Om du vill bygga utan ny push: Dashboard → din tjänst → **Manual Deploy** → **Deploy latest commit**.
 
 4. **Miljövariabler på Render:**  
-   Under **Environment** ska du ha:
+   Under **Environment** ska du minst ha:
    - `DATABASE_URL` – din Render PostgreSQL-databas-URL (om du använder PostgreSQL).
    - `SECRET_KEY` – en hemlig nyckel för sessioner (t.ex. en lång slumpsträng).
+
+   **För lösenordsåterställning via e-post** (valfritt men rekommenderat i produktion): lägg även till `MAIL_SERVER`, `MAIL_PORT`, `MAIL_USERNAME`, `MAIL_PASSWORD`, `MAIL_DEFAULT_SENDER` samt vid behov `MAIL_USE_TLS` / `MAIL_USE_SSL`, och **`PUBLIC_APP_URL`** (publik HTTPS-URL till appen utan avslutande `/`, t.ex. `https://baskettime.app`). Se [RENDER-DATABAS-OCH-DOMAN.md](./RENDER-DATABAS-OCH-DOMAN.md).
 
 5. **Build command** (vanligt för Flask):  
    `pip install -r requirements.txt`
@@ -82,7 +86,7 @@ Efter lyckad push väntar du någon minut så att Render bygger och startar om t
 
 Appen cachar filer för offline. När du deployat ny kod måste cachen bytas ut.
 
-1. **Öka cache-versionen i `sw.js`** (redan gjort vid behov): ändra t.ex. `CACHE_NAME = 'baskettime-v3'` till `baskettime-v4` vid nästa deploy. Då slänger telefonen gamla filer och laddar nya.
+1. **Öka cache-versionen i `sw.js`** vid varje större frontend-deploy: ändra `CACHE_NAME = 'baskettime-v…'` till nästa versionsnummer (t.ex. från `v9` till `v10`). Då slänger klienten gamla filer och laddar nya.
 2. **På telefonen:** Stäng appen helt (avsluta fliken eller PWA). Öppna BasketTime igen – då hämtas ofta nytt innehåll.
 3. **Om det fortfarande är gammalt:** Rensa webbplatsdata för BasketTime:
    - **iPhone (Safari):** Inställningar → Safari → Avancerat → Webbplatsdata → sök efter BasketTime/domänen → stryk.

@@ -204,8 +204,72 @@ a.login-logo-wrap:focus-visible {
   color: var(--text-error, #c00);
 }
 
+.login-error--ok {
+  color: #1a6b1a;
+}
+
 .login-register-btn {
   margin-top: 8px;
+}
+
+.login-email-wrap {
+  margin-top: 4px;
+}
+
+.login-forgot-wrap {
+  margin: 4px 0 0;
+  text-align: center;
+}
+
+.login-link-btn {
+  background: none;
+  border: none;
+  color: var(--primary, #2b5a8a);
+  text-decoration: underline;
+  cursor: pointer;
+  font: inherit;
+  padding: 8px 4px;
+  min-height: 44px;
+}
+
+.login-link-btn:hover,
+.login-link-btn:focus-visible {
+  text-decoration: none;
+}
+
+.modal-hint {
+  font-size: 0.95rem;
+  color: #555;
+  margin: 0 0 12px;
+  line-height: 1.4;
+}
+
+.modal-actions--stack {
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.settings-email-hint {
+  font-size: 0.9rem;
+  color: #555;
+  margin: 0 0 8px;
+  line-height: 1.35;
+}
+
+.settings-email-msg {
+  font-size: 0.9rem;
+  margin: 6px 0 8px;
+  min-height: 1.2em;
+  color: var(--text-error, #c00);
+}
+
+.settings-email-msg--ok {
+  color: #1a6b1a;
+}
+
+.settings-email-save {
+  margin-bottom: 12px;
 }
 
 /* Telefonläge: smal vy centrerad som en telefon */

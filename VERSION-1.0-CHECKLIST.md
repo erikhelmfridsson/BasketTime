@@ -35,7 +35,7 @@ Detta är en prioriterad lista. Du behöver inte ha allt, men ju fler punkter du
 
 ## Kan vänta till 1.1
 
-- **Lösenordsåterställning** – kräver e-post eller annan återställningsväg; kan komma i nästa version.
+- **Lösenordsåterställning** – finns nu via e-post (SMTP + `PUBLIC_APP_URL` på servern). **Valfritt för 1.0:** om du inte konfigurerar mail kan du fortfarande släppa; användare utan konfigurerad SMTP får ingen “Glömt lösenord”-funktion.
 - **Starkare lösenordskrav** – t.ex. minst 8 tecken eller krav på siffra/tecken; bra men inte kritiskt för 1.0.
 - **Integritetspolicy / cookie-info** – viktigt vid större eller kommersiell användning; för intern/sluten användning kan det vänta.
 - **Automatiska tester** – önskvärt långsiktigt; 1.0 kan lanseras efter manuell testning om du är nöjd med flödena.

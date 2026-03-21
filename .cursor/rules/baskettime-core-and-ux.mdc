@@ -5,10 +5,14 @@ alwaysApply: true
 
 # BasketTime – kärnapp och UX
 
+Fullständig funktionslista (API, filer): se **`baskettime-funktionsindex.mdc`**.
+
 ## Översikt
-- **PWA**: manifest.json, sw.js (offline), localStorage med versionerade nycklar. Kör med `npx serve`.
+- **PWA**: manifest.json, sw.js (offline), localStorage med versionerade nycklar (`baskettime.*.v1`). Kör med `npx serve` eller Flask (`python app.py`).
+- **Backend-synk:** Vid inloggning laddas lag och matcher från `/api/teams` och `/api/matches`; `apiState.loggedIn` styr om sparning går till API. Se `apiFetch` och `BASKETTIME_API_BASE`.
 - **Navigation**: flikar Match, Lag, Historik, Statistik. Ingen "Pågående match"-knapp eller "Pausad"-badge i headern (borttagna).
 - **Vyväljare**: Telefon / Dator i headern; val sparas i `baskettime.viewMode.v1`. Telefon = smal layout (max 430px), Dator = bredare (max 900px).
+- **Lägesväljare (inställningar):** **Lag** vs **Förälder** (`baskettime.appMode.v1`) – föräldravyn har utökade fält (bl.a. **rebounds**). Rebounds finns i klientens sparade match men **backend `MatchPlayer` saknar kolumn** – rebounds persistens i databas kräver schemaändring.
 
 ## Matchflöde
 - **Ny match**: formulär med matchnamn, datum, välj lag → **Börja** skapar match och laddar lagets spelare.
@@ -21,12 +25,13 @@ alwaysApply: true
 
 ## Lag och data
 - **Lag**: `baskettime.teams.v1` (id, namn, spelare med id+namn). Flik Lag: lista, Nytt lag, Redigera, Radera.
-- **Matcher**: `baskettime.matches.v1`. Match har name, dateISO, teamId, teamNameAtTime, matchSeconds, players (playerId, playerNameAtTime, secondsOnCourt, assists, fouls, goals).
-- **Spelare per match**: `playerInMatch` (val), `playerAssists`, `playerFouls`, `playerGoals`; sparas med matchen.
+- **Matcher**: `baskettime.matches.v1` (lokal cache) + server via API när inloggad. Match har name, dateISO, teamId, teamNameAtTime, matchSeconds, players med bl.a. secondsOnCourt, assists, fouls, **goals** (poäng, kolumn ofta **P**), **shots**, **madeShots**.
+- **Spelare per match**: `playerInMatch`, `playerAssists`, `playerFouls`, `playerGoals`, `playerShots`, `playerMadeShots`, `playerRebounds` (rebounds bara meningsfullt i föräldraläge; DB enligt `MatchPlayer`).
 
 ## Statistik
 - Säsongstotals per **spelare + lag** (samma namn i olika lag = separata rader). Lagtagg visas.
-- Lista som historik: spelarnamn + lagnamn ovanför tabell; tabell med Plan, Bänk, %, Matcher, A, F, M (inga kolumner "Snitt plan" / "Snitt %").
+- Tabell: Plan, Bänk, %, Matcher, A, F, **P** (poäng), skott/träff/procent där UI visar det (i18n `table.pointsLetter`, `parent.shotsShort`, m.m.).
+- **Diagram:** växling mellan **stapel** och **linje** (knappar i statistikdiagramvyn); SVG i `app.js`.
 - **Exportera CSV** från statistikvyn; filnamn `baskettime-statistik-YYYYMMDD-HHMM.csv`.
 
 ## Historik
@@ -40,4 +45,7 @@ alwaysApply: true
 - Ljus grå-blå skala, svart text på ljus bakgrund (`#eef1f5`, `#ffffff` kort, primär `#2b5a8a`). Plan = grön, Bänk = grå. Touch-min 44px där det är möjligt.
 
 ## Filer
-- index.html, styles.css, app.js, manifest.json, sw.js. State, timer, vyer, storage och export är separerade i app.js.
+- **Kärna:** `index.html`, `styles.css`, `app.js`, `manifest.json`, `sw.js`.
+- **Inloggning / återställning:** `reset-password.html`, `reset-password.js` (i18n via `i18n.js`).
+- **Landning (ev. annan domän):** `landing.html`, `landing/matcher.html` – kan konsumera `GET /api/public/matches`.
+- State, timer, vyer, storage och export är samlade i `app.js` (stor fil – sök på funktionsnamn vid ändringar).

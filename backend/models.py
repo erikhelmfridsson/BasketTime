@@ -17,6 +17,10 @@ class User(db.Model):
     username = Column(String(120), unique=True, nullable=False, index=True)
     password_hash = Column(String(256), nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow)
+    # Valfri e-post: befintliga konton kan vara utan; krävs för lösenordsåterställning
+    email = Column(String(255), unique=True, nullable=True, index=True)
+    password_reset_token_hash = Column(String(256), nullable=True)
+    password_reset_expires_at = Column(DateTime, nullable=True)
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
@@ -25,7 +29,11 @@ class User(db.Model):
         return check_password_hash(self.password_hash, password)
 
     def to_dict(self):
-        return {"id": self.id, "username": self.username}
+        return {
+            "id": self.id,
+            "username": self.username,
+            "email": self.email or "",
+        }
 
 
 class Team(db.Model):

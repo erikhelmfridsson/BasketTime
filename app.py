@@ -9,6 +9,7 @@ from flask import Flask, request, send_from_directory
 from werkzeug.middleware.proxy_fix import ProxyFix
 
 from backend.models import db
+from backend.schema_migrations import ensure_user_email_and_reset_columns
 
 # Domäner som ska visa landningssidan istället för appen (resten får index/app)
 LANDING_HOSTS = {"baskettime.se", "www.baskettime.se"}
@@ -57,6 +58,7 @@ def create_app():
 
     with app.app_context():
         db.create_all()
+        ensure_user_email_and_reset_columns(db)
 
     @app.route("/")
     def index():

@@ -1,0 +1,116 @@
+---
+description: Fullständig registrering av BasketTime-funktionalitet (API, filer, data, integrationer) – använd som sanningskälla vid utveckling
+alwaysApply: true
+---
+
+# BasketTime – funktionsindex
+
+Översikt över **vad som finns i kodbasen**. Uppdatera denna regel när du lägger till eller tar bort större funktioner. Detaljerad UX finns i `baskettime-core-and-ux.mdc`; auth/e-post i `baskettime-auth-deploy-context.mdc`; i18n i `baskettime-project-context.mdc`.
+
+---
+
+## Teknikstack
+
+| Lager | Teknik |
+|-------|--------|
+| Frontend | HTML, CSS, **Vanilla JS** (`app.js`), ingen ramverk |
+| i18n | `i18n.js`, `locales/sv.json` / `en.json` / `de.json`, `data-i18n` |
+| PWA | `manifest.json`, `sw.js` (`CACHE_NAME` – öka vid större deploy) |
+| Backend | **Flask** (`app.py`), **SQLAlchemy**, **Gunicorn** (produktion) |
+| DB | **PostgreSQL** (Render), **SQLite** lokalt (`baskettime.db`), valfritt **MySQL** via URL (`DATABAS-LOOPIA.md`) |
+
+---
+
+## Backend – filer och blueprints
+
+| Fil | Prefix | Roll |
+|-----|--------|------|
+| `app.py` | – | Skapar Flask-app, `db`, `ProxyFix` vid `DATABASE_URL`, session cookies, **LANDING_HOSTS**, statiska routes |
+| `backend/auth.py` | – | `get_current_user()`, `login_required` |
+| `backend/models.py` | – | `User`, `Team`, `TeamPlayer`, `Match`, `MatchPlayer` |
+| `backend/mail.py` | – | `send_mail()` (SMTP via `MAIL_*`) |
+| `backend/schema_migrations.py` | – | `ensure_user_email_and_reset_columns(db)` |
+| `backend/routes/auth_routes.py` | `/api/auth` | register, login, logout, me, profile, forgot/reset password |
+| `backend/routes/teams_routes.py` | `/api/teams` | CRUD lag (per inloggad användare) |
+| `backend/routes/matches_routes.py` | `/api/matches` | lista, spara, hämta, radera, rensa allt |
+| `backend/routes/public_routes.py` | `/api/public` | `GET /matches` – publik läslista (CORS `*`, max 500) |
+
+---
+
+## API – endpoints (kort)
+
+**Session:** cookie-baserad; `apiFetch` använder `credentials: 'include'`.
+
+| Metod | Sökväg | Auth | Beskrivning |
+|-------|--------|------|-------------|
+| POST | `/api/auth/register` | – | Nytt konto (e-post obligatorisk) |
+| POST | `/api/auth/login` | – | Användarnamn eller e-post + lösenord |
+| POST | `/api/auth/logout` | – | Rensa session |
+| GET | `/api/auth/me` | session | Aktuell användare |
+| PUT | `/api/auth/profile` | ja | Sätt/uppdatera e-post |
+| POST | `/api/auth/forgot-password` | – | Skicka återställningsmail |
+| POST | `/api/auth/reset-password` | – | Nytt lösenord med token |
+| GET/POST | `/api/teams`, `/api/teams/<id>` | ja | Lag CRUD |
+| GET/POST | `/api/matches` | ja | Lista / spara match |
+| GET/DELETE | `/api/matches/<id>` | ja | Hämta / radera match |
+| POST | `/api/matches/clear` | ja | Rensa all historik för användaren |
+| GET | `/api/public/matches` | – | Alla matchers data (landningssidor) |
+
+**Frontend:** valfri bas-URL via `window.BASKETTIME_API_BASE` i `apiFetch` (tom = samma origin).
+
+---
+
+## Datamodell (match per spelare)
+
+`MatchPlayer` (PostgreSQL/SQLite) sparar: tid på plan, assists, fouls, **goals**, **shots**, **made_shots**. **Rebounds** finns i föräldravyn och följer med i klientens matchobjekt vid sparning, men backend har **ingen kolumn** för rebounds – de **lagras alltså inte** i DB och försvinner vid ren API-roundtrip. Lägg till kolumn + `matches_routes` om rebounds ska persistas.
+
+---
+
+## Flask – sidor och värdnamn
+
+- **`/`:** om `request.host` (utan port) finns i **`LANDING_HOSTS`** (`baskettime.se`, `www.baskettime.se`) → `landing.html`, annars `index.html`.
+- **`/landing`**, **`/landing/matcher`** → landningssidor.
+- **`/<path:path>`** → statiska filer från projektrot (`index.html`, `reset-password.html`, assets, m.m.).
+
+---
+
+## Frontend – huvudmoduler i `app.js`
+
+- **API-lager:** `apiFetch`, `apiState` (available/loggedIn), `checkApiSession`, `loadTeamsFromApi`, `loadMatchesFromApi`; vid inloggning synkas lag/matcher mot backend.
+- **Inloggning:** `login-screen`, register-läge, glömt lösenord-modal, `setLoginRegisterMode`, `refreshLoginScreenI18n`.
+- **Inställningar:** språk (SV/EN/DE), tema, vy (telefon/dator), **Lag/Förälder**, **e-post** (profil).
+- **Match:** ny match, spelarval, timer (`visibilitychange`-paus), plan/bänk, statistikknappar (A, F, poäng **P**, skott S/T, träffprocent där det finns).
+- **Föräldraläge (`appMode` parent):** egen vy med bl.a. shots, made shots, fouls, assists, **rebounds**, poäng; sparad i `baskettime.appMode.v1`.
+- **Historik:** lista, detalj, radera en match, rensa allt (bekräftelse), CSV-export.
+- **Statistik:** filter (inkl. föräldravyn som eget “lag”), tabell, **stapel-/linjediagram**, CSV-export.
+- **Lag:** lista, skapa/redigera/radera lag och spelare.
+- **Export:** CSV med tidsstämplade filnamn (statistik + matchdetalj).
+
+---
+
+## Filer som ofta ändras tillsammans
+
+| Ändring | Filer |
+|---------|--------|
+| Ny användartext | `locales/*.json`, `i18n.js` fallbacks, ev. `index.html` `data-i18n` |
+| Auth/API | `backend/routes/auth_routes.py`, `app.js` (inloggning), `backend/models.py` |
+| Match/sparade fält | `backend/models.py`, `matches_routes.py`, `app.js` (serialisering) |
+| Deploy/cache | `sw.js` CACHE_NAME, `render.yaml` / `Procfile`, `requirements.txt` |
+| Landning / publik data | `public_routes.py`, `landing.html`, ev. `landing/matcher.html` |
+
+---
+
+## Dokumentation i repot
+
+`README.md`, `DOCS.md`, `TODO.md`, `DEPLOY.md`, `STANDARD-SETUP.md`, `RENDER-DATABAS-OCH-DOMAN.md`, `DATABAS-LOOPIA.md`, `FLYTTA-TILL-LOOPIA.md`, `VERSION-1.0-CHECKLIST.md`.
+
+---
+
+## Miljövariabler (sammanfattning)
+
+| Variabel | Syfte |
+|----------|--------|
+| `SECRET_KEY` | Sessionsäkerhet |
+| `DATABASE_URL` | PostgreSQL/SQLite/MySQL-URL |
+| `MAIL_*`, `PUBLIC_APP_URL` | E-post och länkar för lösenordsåterställning |
+| `PORT` | Lokalt/Render port |

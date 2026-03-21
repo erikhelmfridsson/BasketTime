@@ -21,7 +21,7 @@
         <img src="assets/logo.png" alt="BasketTime" class="login-logo" width="240" height="80">
       </a>
       <h1 id="login-title" class="login-title" data-i18n="login.title">Logga in</h1>
-      <p class="login-description" data-i18n="login.description">Ange dina uppgifter för att komma åt BasketTime.</p>
+      <p id="login-description" class="login-description" data-i18n="login.description">Ange dina uppgifter för att komma åt BasketTime.</p>
       <p class="login-links">
         <a class="login-link" href="https://baskettime.se/landing" target="_blank" rel="noopener noreferrer" data-i18n="login.linkLanding">
           Startsida &amp; guider (baskettime.se)
@@ -32,10 +32,19 @@
           <span data-i18n="login.username">Användarnamn</span>
         </label>
         <input type="text" id="login-username" class="login-input" autocomplete="username" data-i18n-placeholder="login.usernamePlaceholder" placeholder="Användarnamn" required aria-required="true">
+        <div id="login-email-wrap" class="login-email-wrap" hidden>
+        <label class="login-label" for="login-email">
+          <span data-i18n="login.email">E-post</span>
+        </label>
+        <input type="email" id="login-email" class="login-input" autocomplete="email" data-i18n-placeholder="login.emailPlaceholder" placeholder="namn@exempel.se" aria-required="false">
+        </div>
         <label class="login-label" for="login-password">
           <span data-i18n="login.password">Lösenord</span>
         </label>
         <input type="password" id="login-password" class="login-input" autocomplete="current-password" data-i18n-placeholder="login.passwordPlaceholder" placeholder="Lösenord" required aria-required="true">
+        <p class="login-forgot-wrap" id="login-forgot-wrap">
+          <button type="button" id="login-forgot-btn" class="login-link-btn" data-i18n="login.forgotPassword">Glömt lösenord?</button>
+        </p>
         <p id="login-error" class="login-error" role="alert" hidden></p>
         <button type="submit" class="btn btn-primary btn-touch btn-full login-submit" data-i18n="login.submit">Logga in</button>
         <button type="button" id="login-register-btn" class="btn btn-secondary btn-touch btn-full login-register-btn" data-i18n="login.register">Skapa konto</button>
@@ -46,6 +55,22 @@
       <span class="storage-status-badge" data-storage-status-badge data-i18n-aria-label="storageStatus.aria" aria-label="Lagringsstatus"></span>
     </div>
   </div>
+
+  <dialog id="modal-forgot-password" class="modal" aria-labelledby="modal-forgot-title" aria-modal="true">
+    <div class="modal-content">
+      <h2 id="modal-forgot-title" class="modal-title" data-i18n="forgot.title">Återställ lösenord</h2>
+      <p class="modal-hint" data-i18n="forgot.description">Vi skickar en länk till den här adressen om det finns ett konto.</p>
+      <label class="login-label" for="forgot-email-input">
+        <span data-i18n="login.email">E-post</span>
+      </label>
+      <input type="email" id="forgot-email-input" class="login-input" autocomplete="email" data-i18n-placeholder="login.emailPlaceholder" placeholder="namn@exempel.se">
+      <p id="forgot-msg" class="login-error" role="status" hidden></p>
+      <div class="modal-actions modal-actions--stack">
+        <button type="button" id="forgot-submit" class="btn btn-primary btn-touch btn-full" data-i18n="forgot.submit">Skicka länk</button>
+        <button type="button" id="forgot-close" class="btn btn-outline btn-touch btn-full" data-i18n="forgot.close">Stäng</button>
+      </div>
+    </div>
+  </dialog>
 
   <div id="app" class="app-content">
     <!-- Sticky header: match clock -->
@@ -306,6 +331,12 @@
         <button type="button" class="settings-lang-btn" data-lang="en">EN</button>
         <button type="button" class="settings-lang-btn" data-lang="de">DE</button>
       </div>
+      <p class="modal-label" data-i18n="settings.email">E-post</p>
+      <p id="settings-email-hint" class="settings-email-hint" data-i18n="settings.emailHint">Med sparad e-post kan du återställa lösenordet om du glömmer det.</p>
+      <label class="sr-only" for="settings-email-input" data-i18n="settings.email">E-post</label>
+      <input type="email" id="settings-email-input" class="login-input" autocomplete="email" data-i18n-placeholder="login.emailPlaceholder" placeholder="namn@exempel.se">
+      <p id="settings-email-msg" class="settings-email-msg" role="status" hidden></p>
+      <button type="button" id="btn-settings-email-save" class="btn btn-secondary btn-touch btn-full settings-email-save" data-i18n="settings.emailSave">Spara e-post</button>
       <p class="modal-label" data-i18n="settings.theme">Färgtema</p>
       <div class="settings-theme-btns" role="group" aria-label="Färgtema">
         <button type="button" class="settings-theme-btn" data-theme="blue" title="Blå"><span class="theme-swatch theme-blue"></span><span data-i18n="settings.themeBlue">Blå</span></button>

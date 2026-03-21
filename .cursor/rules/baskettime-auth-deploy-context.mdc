@@ -1,0 +1,47 @@
+---
+description: Autentisering, e-post, lösenordsåterställning, Render/SMTP och dokumentationsbeslut (aktiv kontext för utveckling)
+alwaysApply: true
+---
+
+# BasketTime – auth, drift och gemensam kontext
+
+Denna regel samlar **beslut och fakta** från projektets utvecklingsdiskussioner s att framtida ändringar blir konsekventa och fel minskas. Uppdatera regeln när ni fattar nya arkitekturbeslut. **Komplett API- och modulista:** `baskettime-funktionsindex.mdc`.
+
+## Användare och e-post
+
+- **Nya konton:** vid registrering krävs **e-post** (förutom användarnamn och lösenord).
+- **Befintliga konton** (skapade innan e-postkrav): kan fortsätta **utan** e-post; de kan lägga till e-post under **Inställningar** för att aktivera **lösenordsåterställning**.
+- **Inloggning:** identifierfält accepterar **användarnamn eller e-post** (backend slår mot rätt fält beroende på om värdet innehåller `@`).
+
+## Backend (Flask)
+
+- **Auth:** `backend/routes/auth_routes.py` – register, login, logout, me, `PUT /api/auth/profile` (e-post), `POST /api/auth/forgot-password`, `POST /api/auth/reset-password`.
+- **Modell:** `backend/models.py` – `User` har `email` (nullable), `password_reset_token_hash`, `password_reset_expires_at`.
+- **Migration utan Alembic:** `backend/schema_migrations.py` – `ensure_user_email_and_reset_columns(db)` körs efter `db.create_all()` i `app.py`.
+- **E-postutskick:** `backend/mail.py` – `send_mail()` läser `MAIL_*` från miljö.
+
+## Frontend
+
+- **Inloggning:** register-läge visar e-postfält; växling mellan inloggning/registrering ska inte bryta i18n (använd `setLoginRegisterMode` / `refreshLoginScreenI18n`).
+- **Glömt lösenord:** dialog + `POST /api/auth/forgot-password`.
+- **Återställning:** statiska sidorna `reset-password.html` + `reset-password.js` (token i query).
+- **Inställningar:** spara e-post via `PUT /api/auth/profile`.
+- Vid nya användartexter: **`locales/sv.json`, `en.json`, `de.json`** + inbäddade fallbacks i **`i18n.js`** (samma nycklar).
+
+## Miljövariabler (produktion, t.ex. Render)
+
+- **Obligatoriskt för drift:** `SECRET_KEY`, `DATABASE_URL` (PostgreSQL på Render rekommenderas).
+- **Lösenordsåterställning via mail:** `MAIL_SERVER`, `MAIL_PORT`, `MAIL_USERNAME`, `MAIL_PASSWORD`, `MAIL_DEFAULT_SENDER`; vid behov `MAIL_USE_TLS` / `MAIL_USE_SSL`.
+- **`PUBLIC_APP_URL`:** bas-URL **utan** avslutande `/` (t.ex. `https://baskettime.app`) – används i återställningslänken i mailet. Utan den kan länken bli fel bakom proxy.
+
+## Dokumentation i repot
+
+- **`DOCS.md`** – index över alla guider.
+- **`TODO.md`** – att göra (drift, test efter deploy, valfritt).
+- **`RENDER-DATABAS-OCH-DOMAN.md`** – PostgreSQL, domän, HTTPS, SMTP-tabell.
+
+## För att undvika återkommande fel
+
+- **Skugga inte `t()`:** använd inte variabelnamnet `t` för lag/loop (se `baskettime-project-context.mdc`).
+- **Service worker:** öka **`CACHE_NAME` i `sw.js`** vid större frontendändringar s att PWA-cache uppdateras (kontrollera aktuellt värde i filen).
+- **MySQL/Loopia:** standarddrift i repot är **PostgreSQL (Render)** eller **SQLite** lokalt; Loopia MariaDB är dokumenterat i `DATABAS-LOOPIA.md` och kräver `mysql+pymysql`-URL – blanda inte ihop med Render-PostgreSQL utan medvetenhet.

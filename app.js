@@ -2135,9 +2135,56 @@
         if (btnParent) { btnParent.classList.toggle('active', state.appMode === 'parent'); btnParent.setAttribute('aria-pressed', state.appMode === 'parent'); }
         applyViewMode();
         applyTheme();
+        loadSettingsEmailIntoForm();
         modalSettings.showModal();
       });
       if ((el = document.getElementById('btn-close-settings'))) el.addEventListener('click', function () { modalSettings.close(); });
+      if ((el = document.getElementById('btn-settings-email-save'))) {
+        el.addEventListener('click', function () {
+          var input = document.getElementById('settings-email-input');
+          var msg = document.getElementById('settings-email-msg');
+          var hint = document.getElementById('settings-email-hint');
+          var email = input && input.value ? input.value.trim() : '';
+          if (!loginEmailValid(email)) {
+            if (msg) {
+              msg.hidden = false;
+              msg.textContent = t('login.errorEmail');
+              msg.className = 'settings-email-msg';
+            }
+            return;
+          }
+          el.disabled = true;
+          var prev = el.textContent;
+          el.textContent = t('settings.emailSaving');
+          apiFetch('/api/auth/profile', { method: 'PUT', body: { email: email } }).then(function (r) {
+            return r.json().catch(function () { return {}; }).then(function (data) {
+              if (r.ok) {
+                if (msg) {
+                  msg.hidden = false;
+                  msg.textContent = t('settings.emailSaved');
+                  msg.className = 'settings-email-msg settings-email-msg--ok';
+                }
+                if (hint) hint.textContent = t('settings.emailHint');
+                return;
+              }
+              if (msg) {
+                msg.hidden = false;
+                msg.textContent = data.error || t('settings.emailError');
+                msg.className = 'settings-email-msg';
+              }
+            });
+          }).catch(function () {
+            if (msg) {
+              msg.hidden = false;
+              msg.textContent = t('settings.emailError');
+              msg.className = 'settings-email-msg';
+            }
+          }).finally(function () {
+            el.disabled = false;
+            el.textContent = prev;
+          });
+        });
+      }
       modalSettings.querySelectorAll('.settings-lang-btn').forEach(function (b) {
         b.addEventListener('click', function () {
           var lang = b.getAttribute('data-lang');
@@ -2396,6 +2443,116 @@
     navigator.serviceWorker.register('./sw.js', { scope: './' }).catch(function () {});
   }
 
+  var loginModeRegister = false;
+
+  function loginEmailValid(value) {
+    var s = (value || '').trim();
+    if (s.length < 5 || s.indexOf('@') < 1) return false;
+    var parts = s.split('@');
+    if (parts.length !== 2) return false;
+    return parts[1].indexOf('.') >= 0;
+  }
+
+  function setLoginRegisterMode(isRegister) {
+    loginModeRegister = !!isRegister;
+    var screen = document.getElementById('login-screen');
+    if (screen) screen.classList.toggle('login-mode-register', loginModeRegister);
+    var emailWrap = document.getElementById('login-email-wrap');
+    if (emailWrap) emailWrap.hidden = !loginModeRegister;
+    var forgotWrap = document.getElementById('login-forgot-wrap');
+    if (forgotWrap) forgotWrap.hidden = loginModeRegister;
+    var titleEl = document.getElementById('login-title');
+    var descEl = document.getElementById('login-description');
+    var submitBtn = document.querySelector('.login-submit');
+    var regBtn = document.getElementById('login-register-btn');
+    if (titleEl) titleEl.textContent = loginModeRegister ? t('login.registerTitle') : t('login.title');
+    if (descEl) descEl.textContent = loginModeRegister ? t('login.registerDescription') : t('login.description');
+    if (submitBtn && !submitBtn.disabled) {
+      submitBtn.textContent = loginModeRegister ? t('login.submitRegister') : t('login.submit');
+    }
+    if (regBtn) regBtn.textContent = loginModeRegister ? t('login.toggleToLogin') : t('login.register');
+  }
+
+  function refreshLoginScreenI18n() {
+    setLoginRegisterMode(loginModeRegister);
+  }
+
+  function loadSettingsEmailIntoForm() {
+    var hint = document.getElementById('settings-email-hint');
+    var input = document.getElementById('settings-email-input');
+    var msg = document.getElementById('settings-email-msg');
+    if (msg) {
+      msg.hidden = true;
+      msg.textContent = '';
+      msg.className = 'settings-email-msg';
+    }
+    apiFetch('/api/auth/me').then(function (r) {
+      if (!r.ok) return;
+      return r.json().then(function (data) {
+        var em = data.user && data.user.email ? data.user.email : '';
+        if (input) input.value = em;
+        if (hint) hint.textContent = em ? t('settings.emailHint') : t('settings.emailNone');
+      });
+    }).catch(function () {});
+  }
+
+  function setupForgotPasswordModal() {
+    var modal = document.getElementById('modal-forgot-password');
+    var btn = document.getElementById('login-forgot-btn');
+    var closeBtn = document.getElementById('forgot-close');
+    var subBtn = document.getElementById('forgot-submit');
+    var inp = document.getElementById('forgot-email-input');
+    var msg = document.getElementById('forgot-msg');
+    if (!modal || !btn) return;
+    btn.addEventListener('click', function () {
+      if (msg) {
+        msg.hidden = true;
+        msg.textContent = '';
+      }
+      modal.showModal();
+      if (inp) inp.focus();
+    });
+    if (closeBtn) closeBtn.addEventListener('click', function () { modal.close(); });
+    if (subBtn) {
+      subBtn.addEventListener('click', function () {
+        var email = inp && inp.value ? inp.value.trim() : '';
+        if (!loginEmailValid(email)) {
+          if (msg) {
+            msg.hidden = false;
+            msg.textContent = t('login.errorEmail');
+          }
+          return;
+        }
+        subBtn.disabled = true;
+        var prev = subBtn.textContent;
+        subBtn.textContent = t('forgot.loading');
+        apiFetch('/api/auth/forgot-password', { method: 'POST', body: { email: email } }).then(function (r) {
+          return r.json().catch(function () { return {}; }).then(function (data) {
+            if (r.ok) {
+              if (msg) {
+                msg.hidden = false;
+                msg.textContent = t('forgot.message');
+              }
+              return;
+            }
+            if (msg) {
+              msg.hidden = false;
+              msg.textContent = data.error || t('login.errorServer');
+            }
+          });
+        }).catch(function () {
+          if (msg) {
+            msg.hidden = false;
+            msg.textContent = t('login.errorNetwork');
+          }
+        }).finally(function () {
+          subBtn.disabled = false;
+          subBtn.textContent = prev;
+        });
+      });
+    }
+  }
+
   function showAppHideLogin() {
     document.body.classList.add('app-logged-in');
     var loginEl = document.getElementById('login-screen');
@@ -2417,7 +2574,9 @@
     var registerBtn = document.getElementById('login-register-btn');
     if (submitBtn) {
       submitBtn.disabled = loading;
-      submitBtn.textContent = loading ? t('login.loading') : t('login.submit');
+      submitBtn.textContent = loading
+        ? (loginModeRegister ? t('login.loadingRegister') : t('login.loading'))
+        : (loginModeRegister ? t('login.submitRegister') : t('login.submit'));
     }
     if (registerBtn) registerBtn.disabled = loading;
     storageStatusChecking = !!loading;
@@ -2432,15 +2591,25 @@
     }
   }
 
-  function submitLoginOrRegister(isRegister) {
+  function submitLoginOrRegister() {
+    var isRegister = loginModeRegister;
     var userEl = document.getElementById('login-username');
     var passEl = document.getElementById('login-password');
+    var emailEl = document.getElementById('login-email');
     var user = userEl && userEl.value ? userEl.value.trim() : '';
     var pass = passEl ? passEl.value : '';
+    var email = emailEl && emailEl.value ? emailEl.value.trim() : '';
     showLoginError('');
     if (!user) {
       if (userEl) userEl.focus();
       return;
+    }
+    if (isRegister) {
+      if (!loginEmailValid(email)) {
+        showLoginError(t('login.errorEmail'));
+        if (emailEl) emailEl.focus();
+        return;
+      }
     }
     if (isRegister && (!pass || pass.length < 6)) {
       showLoginError(t('login.errorPasswordLength'));
@@ -2448,7 +2617,10 @@
     }
     setLoginLoading(true);
     var path = isRegister ? '/api/auth/register' : '/api/auth/login';
-    apiFetch(path, { method: 'POST', body: { username: user, password: pass } }).then(function (r) {
+    var body = isRegister
+      ? { username: user, email: email, password: pass }
+      : { username: user, password: pass };
+    apiFetch(path, { method: 'POST', body: body }).then(function (r) {
         if (r.ok) {
           return r.json().then(function (data) {
             var u = data.user && data.user.username ? data.user.username : user;
@@ -2490,7 +2662,7 @@
           setLoginLoading(false);
           showLoginError(msg);
         });
-      }).catch(function (err) {
+      }).catch(function () {
         setLoginLoading(false);
         if (isRegister) {
           showLoginError(t('login.errorRegister'));
@@ -2506,10 +2678,11 @@
     if (!form || !loginScreen) return;
     form.addEventListener('submit', function (e) {
       e.preventDefault();
-      submitLoginOrRegister(false);
+      submitLoginOrRegister();
     });
     var registerBtn = document.getElementById('login-register-btn');
-    if (registerBtn) registerBtn.addEventListener('click', function () { submitLoginOrRegister(true); });
+    if (registerBtn) registerBtn.addEventListener('click', function () { setLoginRegisterMode(!loginModeRegister); });
+    setupForgotPasswordModal();
   }
 
   function runInit() {
@@ -2589,6 +2762,7 @@
   document.addEventListener('i18n-ready', function () {
     updateStorageStatusIndicator();
     if (inited) refreshViews();
+    refreshLoginScreenI18n();
     var current = window.i18n ? window.i18n.getLang() : 'sv';
     document.querySelectorAll('.settings-lang-btn').forEach(function (btn) {
       btn.classList.toggle('active', btn.getAttribute('data-lang') === current);

@@ -6,6 +6,8 @@
 **Live:** https://ditt-projekt.onrender.com
 -->
 
+**Dokumentation:** se [DOCS.md](./DOCS.md) för index över alla guider. **Att göra** (drift, test, valfritt): [TODO.md](./TODO.md).
+
 ## Köra lokalt (med inloggning)
 
 Appen kräver **Flask-backend** för inloggning. Öppna inte bara `index.html` och använd inte bara `npx serve` – då finns ingen `/api` och inloggning fungerar inte.
@@ -24,9 +26,11 @@ Appen kräver **Flask-backend** för inloggning. Öppna inte bara `index.html` o
 3. **Öppna i webbläsaren:**  
    Gå till **http://localhost:10000**
 
-4. **Första gången:** Det finns inget konto. Klicka på **Skapa konto**, ange användarnamn (minst 2 tecken) och lösenord (minst 6 tecken). Logga in sedan med samma uppgifter.
+4. **Första gången:** Det finns inget konto. Klicka på **Skapa konto**, ange **användarnamn** (minst 2 tecken), **e-post** (obligatorisk för nya konton) och **lösenord** (minst 6 tecken). Logga in sedan med **användarnamn eller e-post** + lösenord.
 
-Lokalt används SQLite-databasen `baskettime.db` i projektmappen (om du inte sätter `DATABASE_URL`).
+Lokalt används SQLite-databasen `baskettime.db` i projektmappen (om du inte sätter `DATABASE_URL`). Vid start läggs vid behov till kolumner för e-post och lösenordsåterställning på befintliga databaser (se `backend/schema_migrations.py`).
+
+**Glömt lösenord** kräver att kontot har en sparad e-post (nya konton har det; äldre konton kan lägga till e-post under **Inställningar**) och att servern har SMTP inställt – se [RENDER-DATABAS-OCH-DOMAN.md](./RENDER-DATABAS-OCH-DOMAN.md).
 
 ## Endast statiska filer (utan inloggning)
 
@@ -70,7 +74,7 @@ Så att appen körs på Render och använder deras databas:
    - en **PostgreSQL-databas** (`baskettime-db`)
    - och kopplar **DATABASE_URL** från databasen till Web Service samt genererar **SECRET_KEY**.
 
-5. **Vänta tills deployen är klar.** Öppna din app-URL (t.ex. `https://baskettime.onrender.com`). Vid första anrop skapas tabellerna automatiskt (`db.create_all()`). Skapa konto via **Skapa konto** och logga in.
+5. **Vänta tills deployen är klar.** Öppna din app-URL (t.ex. `https://baskettime.onrender.com`). Vid första anrop skapas tabellerna automatiskt (`db.create_all()`). Skapa konto via **Skapa konto** (användarnamn, **e-post**, lösenord) och logga in.
 
 ### B) Du har redan en Web Service – koppla databas
 
@@ -89,4 +93,4 @@ Så att appen körs på Render och använder deras databas:
 - Klicka **Skapa konto**, skapa användare och logga in.
 - Skapa ett lag, starta en match – data sparas i PostgreSQL.
 
-Mer detaljer (domän, SSL, cache): se **RENDER-DATABAS-OCH-DOMAN.md** och **DEPLOY.md**.
+Mer detaljer (domän, SSL, e-post för återställning, `PUBLIC_APP_URL`, cache): se **RENDER-DATABAS-OCH-DOMAN.md** och **DEPLOY.md**.

@@ -137,6 +137,46 @@
       .lp-title { font-size: 1.75rem; }
       .match-table { font-size: 0.9rem; }
     }
+    .matcher-controls {
+      background: var(--lp-card);
+      padding: 18px;
+      border-radius: var(--lp-radius);
+      margin-bottom: 20px;
+      box-shadow: var(--lp-shadow);
+      max-width: 100%;
+    }
+    .matcher-control-row {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-bottom: 14px;
+    }
+    .matcher-control-row:last-child { margin-bottom: 0; }
+    .matcher-control-row label {
+      font-weight: 600;
+      font-size: 0.9rem;
+      color: var(--lp-text);
+    }
+    .matcher-control-row input[type="date"],
+    .matcher-control-row select {
+      font: inherit;
+      padding: 10px 12px;
+      border-radius: 8px;
+      border: 1px solid rgba(0, 0, 0, 0.15);
+      min-height: 44px;
+      background: #fff;
+      color: var(--lp-text);
+    }
+    .matcher-control-row select:disabled {
+      opacity: 0.7;
+      cursor: not-allowed;
+    }
+    .matcher-hint {
+      margin: 0 0 16px;
+      font-size: 0.95rem;
+      color: var(--lp-muted);
+      text-align: center;
+    }
   </style>
 </head>
 <body>
@@ -151,12 +191,27 @@
 
     <header class="lp-header">
       <h1 class="lp-title">Alla registrerade matcher</h1>
-      <p class="lp-lead">Här visas sparade matcher från BasketTime med utfall per spelare: speltid, assists, fouls, poäng (P), skott (S), träffar (T) och skottprocent. Listan uppdateras från databasen.</p>
+      <p class="lp-lead">Välj <strong>datum</strong> och sedan <strong>match</strong> i listan för att visa tabell med utfall per spelare: speltid, assists, fouls, poäng (P), skott (S), träffar (T) och skottprocent. Uppdateras från databasen.</p>
       <a href="https://baskettime.app/" class="lp-cta">Öppna BasketTime</a>
     </header>
 
     <div id="matcher-status" class="lp-msg" hidden></div>
-    <div id="matcher-root" aria-live="polite"></div>
+    <div id="matcher-root" aria-live="polite">
+      <div id="matcher-controls" class="matcher-controls" hidden>
+        <div class="matcher-control-row">
+          <label for="matcher-date-filter">Datum</label>
+          <input type="date" id="matcher-date-filter" autocomplete="off">
+        </div>
+        <div class="matcher-control-row">
+          <label for="matcher-match-select">Match</label>
+          <select id="matcher-match-select" aria-describedby="matcher-select-hint" disabled>
+            <option value="">– Välj datum först –</option>
+          </select>
+        </div>
+      </div>
+      <p id="matcher-select-hint" class="matcher-hint" hidden>Välj en match i listan för att visa statistik.</p>
+      <div id="matcher-detail"></div>
+    </div>
 
     <footer class="lp-footer">
       <a href="/landing">Startsida</a> ·
@@ -280,9 +335,132 @@
     });
   }
 
-  var root = document.getElementById('matcher-root');
+  var allMatches = [];
+  var detailEl = document.getElementById('matcher-detail');
+  var controlsEl = document.getElementById('matcher-controls');
+  var hintEl = document.getElementById('matcher-select-hint');
+
   showStatus('Laddar matcher…', false);
   setApiBadge('checking');
+
+  function dateKeyFromMatch(m) {
+    if (!m || !m.dateISO) return '';
+    try {
+      var d = new Date(m.dateISO);
+      if (isNaN(d.getTime())) return '';
+      return d.toISOString().slice(0, 10);
+    } catch (e) {
+      return '';
+    }
+  }
+
+  function sortedUniqueDates(matches) {
+    var set = {};
+    matches.forEach(function (m) {
+      var k = dateKeyFromMatch(m);
+      if (k) set[k] = true;
+    });
+    return Object.keys(set).sort();
+  }
+
+  function matchesForDate(matches, yyyymmdd) {
+    return matches.filter(function (m) {
+      return dateKeyFromMatch(m) === yyyymmdd;
+    });
+  }
+
+  function optionLabel(m) {
+    var name = (m.name || 'Match').trim();
+    var team = (m.teamNameAtTime && String(m.teamNameAtTime).trim()) ? ' · ' + m.teamNameAtTime : '';
+    return name + team;
+  }
+
+  function setupFilters() {
+    var dateEl = document.getElementById('matcher-date-filter');
+    var selEl = document.getElementById('matcher-match-select');
+    if (!dateEl || !selEl || !detailEl) return;
+
+    function clearDetail() {
+      detailEl.innerHTML = '';
+    }
+
+    function updateSelect() {
+      var dk = dateEl.value;
+      selEl.innerHTML = '';
+      if (!dk) {
+        selEl.disabled = true;
+        selEl.appendChild(new Option('– Välj datum först –', ''));
+        clearDetail();
+        if (hintEl) hintEl.hidden = true;
+        return;
+      }
+      var list = matchesForDate(allMatches, dk);
+      if (list.length === 0) {
+        selEl.disabled = true;
+        selEl.appendChild(new Option('Inga matcher detta datum', ''));
+        clearDetail();
+        if (hintEl) hintEl.hidden = true;
+        return;
+      }
+      selEl.disabled = false;
+      selEl.appendChild(new Option('– Välj match –', ''));
+      list.forEach(function (m) {
+        selEl.appendChild(new Option(optionLabel(m), m.id));
+      });
+      clearDetail();
+      if (hintEl) {
+        hintEl.hidden = false;
+        hintEl.textContent = 'Välj en match i listan för att visa statistik.';
+      }
+    }
+
+    function showSelected() {
+      var id = selEl.value;
+      if (!id) {
+        clearDetail();
+        if (hintEl && dateEl.value && matchesForDate(allMatches, dateEl.value).length) {
+          hintEl.hidden = false;
+        }
+        return;
+      }
+      var found = null;
+      for (var j = 0; j < allMatches.length; j++) {
+        if (allMatches[j].id === id) {
+          found = allMatches[j];
+          break;
+        }
+      }
+      if (!found) return;
+      detailEl.innerHTML = renderMatch(found);
+      if (hintEl) hintEl.hidden = true;
+    }
+
+    dateEl.addEventListener('change', updateSelect);
+    selEl.addEventListener('change', showSelected);
+
+    var dates = sortedUniqueDates(allMatches);
+    if (dates.length) {
+      dateEl.min = dates[0];
+      dateEl.max = dates[dates.length - 1];
+      dateEl.value = dates[dates.length - 1];
+      dateEl.disabled = false;
+      updateSelect();
+    } else if (allMatches.length) {
+      dateEl.disabled = true;
+      dateEl.value = '';
+      selEl.innerHTML = '';
+      selEl.disabled = false;
+      selEl.appendChild(new Option('– Välj match –', ''));
+      allMatches.forEach(function (m) {
+        selEl.appendChild(new Option(optionLabel(m), m.id));
+      });
+      clearDetail();
+      if (hintEl) {
+        hintEl.hidden = false;
+        hintEl.textContent = 'Välj en match i listan (datum kunde inte avgöras för alla poster).';
+      }
+    }
+  }
 
   (function load() {
     var urls = apiUrls();
@@ -291,18 +469,22 @@
       if (i >= urls.length) {
         setApiBadge('offline');
         showStatus('Kunde inte hämta matcher. Om sidan ligger på en annan domän än appen, säkerställ att baskettime.app (API) är tillgänglig.', true);
-        if (root) root.innerHTML = '';
+        if (controlsEl) controlsEl.hidden = true;
+        if (detailEl) detailEl.innerHTML = '';
         return;
       }
       fetchJson(urls[i++]).then(function (data) {
         showStatus('', false);
         setApiBadge('cloud');
-        var matches = data.matches || [];
-        if (matches.length === 0) {
-          root.innerHTML = '<p class="lp-msg" style="background:var(--lp-card);color:var(--lp-muted);">Inga matcher är registrerade ännu.</p>';
+        allMatches = data.matches || [];
+        if (allMatches.length === 0) {
+          if (controlsEl) controlsEl.hidden = true;
+          if (detailEl) detailEl.innerHTML = '<p class="lp-msg" style="background:var(--lp-card);color:var(--lp-muted);">Inga matcher är registrerade ännu.</p>';
           return;
         }
-        root.innerHTML = matches.map(renderMatch).join('');
+        if (controlsEl) controlsEl.hidden = false;
+        if (detailEl) detailEl.innerHTML = '';
+        setupFilters();
       }).catch(function () { next(); });
     }
     next();
