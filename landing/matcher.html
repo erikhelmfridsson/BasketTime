@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="description" content="Översikt över alla registrerade matcher i BasketTime med spelarstatistik.">
+  <!-- Tom = använd samma domän som sidan, sedan fallback till baskettime.app. Sätt t.ex. https://baskettime.app om landningen bara är statisk HTML. -->
+  <meta name="baskettime-api-origin" content="">
+  <meta name="theme-color" content="#2b5a8a">
+  <title>Alla matcher – BasketTime</title>
+  <link rel="icon" type="image/png" href="/assets/boll.png">
+  <style>
+    :root {
+      --lp-bg: #eef1f5;
+      --lp-card: #ffffff;
+      --lp-primary: #2b5a8a;
+      --lp-primary-hover: #1e4266;
+      --lp-text: #0d0d0d;
+      --lp-muted: #5c6574;
+      --lp-success: #2d7a4a;
+      --lp-radius: 12px;
+      --lp-shadow: 0 2px 12px rgba(0,0,0,0.06);
+      --lp-safe-top: env(safe-area-inset-top);
+      --lp-safe-bottom: env(safe-area-inset-bottom);
+    }
+    *, *::before, *::after { box-sizing: border-box; }
+    html { font-size: 16px; -webkit-text-size-adjust: 100%; }
+    body {
+      margin: 0;
+      font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+      background: var(--lp-bg);
+      color: var(--lp-text);
+      line-height: 1.5;
+      min-height: 100vh;
+      padding: var(--lp-safe-top) 0 var(--lp-safe-bottom);
+      -webkit-font-smoothing: antialiased;
+    }
+    .lp-wrap { max-width: 900px; margin: 0 auto; padding: 24px 16px 48px; }
+    .lp-nav {
+      display: flex; flex-wrap: wrap; gap: 10px 14px; justify-content: center;
+      margin-bottom: 20px; font-size: 0.95rem;
+    }
+    .lp-nav a { color: var(--lp-primary); text-decoration: none; }
+    .lp-nav a:hover { text-decoration: underline; }
+    .lp-header { text-align: center; margin-bottom: 28px; }
+    .lp-title { margin: 0 0 8px; font-size: 1.5rem; font-weight: 700; }
+    .lp-lead { margin: 0; color: var(--lp-muted); font-size: 1rem; max-width: 36em; margin-left: auto; margin-right: auto; }
+    .lp-msg { padding: 16px; border-radius: var(--lp-radius); background: #fff3e0; color: #5d4037; margin-bottom: 20px; text-align: center; }
+    .lp-msg.error { background: #ffebee; color: #b71c1c; }
+    .match-card {
+      background: var(--lp-card);
+      border-radius: var(--lp-radius);
+      box-shadow: var(--lp-shadow);
+      margin-bottom: 20px;
+      overflow: hidden;
+    }
+    .match-card h2 {
+      margin: 0;
+      padding: 16px 18px;
+      font-size: 1.1rem;
+      font-weight: 600;
+      background: #1e3a5f;
+      color: #fff;
+    }
+    .match-meta {
+      padding: 10px 18px 0;
+      font-size: 0.9rem;
+      color: var(--lp-muted);
+    }
+    .table-wrap { overflow-x: auto; padding: 12px 0 16px; -webkit-overflow-scrolling: touch; }
+    table.match-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.85rem;
+    }
+    .match-table th, .match-table td {
+      padding: 8px 10px;
+      text-align: left;
+      border-bottom: 1px solid rgba(0,0,0,0.08);
+    }
+    .match-table th {
+      font-weight: 600;
+      color: var(--lp-muted);
+      white-space: nowrap;
+      background: rgba(43, 90, 138, 0.06);
+    }
+    .match-table td.num { font-variant-numeric: tabular-nums; text-align: right; }
+    .match-table td.name { font-weight: 500; }
+    .lp-footer { text-align: center; padding: 32px 0 8px; color: var(--lp-muted); font-size: 0.9rem; }
+    .lp-footer a { color: var(--lp-primary); text-decoration: none; }
+    .lp-footer a:hover { text-decoration: underline; }
+    .lp-cta {
+      display: inline-block; margin-top: 8px; padding: 12px 24px;
+      background: var(--lp-primary); color: #fff !important; font-weight: 600;
+      text-decoration: none; border-radius: var(--lp-radius);
+    }
+    .lp-cta:hover { background: var(--lp-primary-hover); }
+    .lp-page-status {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 12px 16px;
+      padding-bottom: max(12px, env(safe-area-inset-bottom));
+      margin-top: 8px;
+      border-top: 1px solid rgba(0,0,0,0.08);
+      background: rgba(255,255,255,0.85);
+    }
+    .storage-status-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      max-width: 100%;
+      padding: 6px 12px;
+      border-radius: 999px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      line-height: 1.25;
+      text-align: center;
+      border: 1px solid transparent;
+    }
+    .storage-status-badge--cloud {
+      background: rgba(46, 125, 50, 0.2);
+      color: #1b5e20;
+      border-color: rgba(46, 125, 50, 0.45);
+    }
+    .storage-status-badge--offline {
+      background: rgba(198, 40, 40, 0.15);
+      color: #b71c1c;
+      border-color: rgba(198, 40, 40, 0.4);
+    }
+    .storage-status-badge--checking {
+      background: rgba(245, 124, 0, 0.18);
+      color: #e65100;
+      border-color: rgba(245, 124, 0, 0.45);
+    }
+    @media (min-width: 600px) {
+      .lp-title { font-size: 1.75rem; }
+      .match-table { font-size: 0.9rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="lp-wrap">
+    <nav class="lp-nav" aria-label="Sidnavigering">
+      <a href="/landing">Startsida</a>
+      <a href="/landing/matcher" aria-current="page">Alla matcher</a>
+      <a href="/användning.html">Så använder du appen</a>
+      <a href="/baskeregler.html">Baskeregler</a>
+      <a href="/domartecken.html">Domartecken</a>
+    </nav>
+
+    <header class="lp-header">
+      <h1 class="lp-title">Alla registrerade matcher</h1>
+      <p class="lp-lead">Här visas sparade matcher från BasketTime med utfall per spelare: speltid, assists, fouls, poäng (P), skott (S), träffar (T) och skottprocent. Listan uppdateras från databasen.</p>
+      <a href="https://baskettime.app/" class="lp-cta">Öppna BasketTime</a>
+    </header>
+
+    <div id="matcher-status" class="lp-msg" hidden></div>
+    <div id="matcher-root" aria-live="polite"></div>
+
+    <footer class="lp-footer">
+      <a href="/landing">Startsida</a> ·
+      <a href="https://baskettime.app/">BasketTime</a> · BasketTime
+    </footer>
+    <div class="lp-page-status" role="status" aria-live="polite">
+      <span id="matcher-api-badge" class="storage-status-badge storage-status-badge--checking" title="Anslutning kontrolleras" aria-label="Lagringsstatus: Kontrollerar anslutning">🟡 Kontrollerar anslutning…</span>
+    </div>
+  </div>
+
+  <script>
+(function () {
+  'use strict';
+
+  function formatMmSs(seconds) {
+    var s = Math.floor(seconds || 0);
+    var m = Math.floor(s / 60);
+    var sec = s % 60;
+    return (m < 10 ? '0' : '') + m + ':' + (sec < 10 ? '0' : '') + sec;
+  }
+
+  function escapeHtml(str) {
+    var d = document.createElement('div');
+    d.textContent = str == null ? '' : String(str);
+    return d.innerHTML;
+  }
+
+  function pct(n) {
+    if (n == null || isNaN(n)) return '–';
+    return (Math.round(n * 10) / 10) + '%';
+  }
+
+  function renderMatch(match) {
+    var matchSec = match.matchSeconds || 0;
+    var title = escapeHtml(match.name || 'Match');
+    var dateStr = '';
+    if (match.dateISO) {
+      try {
+        dateStr = new Date(match.dateISO).toLocaleDateString('sv-SE', { dateStyle: 'medium' });
+      } catch (e) { dateStr = match.dateISO; }
+    }
+    var teamStr = (match.teamNameAtTime && String(match.teamNameAtTime).trim()) ? escapeHtml(match.teamNameAtTime) : '';
+    var meta = [dateStr, teamStr, 'Längd ' + formatMmSs(matchSec)].filter(Boolean).join(' · ');
+
+    var rows = (match.players || []).map(function (p) {
+      var court = p.secondsOnCourt || 0;
+      var bench = Math.max(0, matchSec - court);
+      var planPct = matchSec > 0 ? (100 * court / matchSec) : 0;
+      var shots = p.shots != null ? p.shots : 0;
+      var made = p.madeShots != null ? p.madeShots : 0;
+      var shotPct = shots > 0 ? (100 * made / shots) : null;
+      return (
+        '<tr>' +
+        '<td class="name">' + escapeHtml(p.playerNameAtTime || '') + '</td>' +
+        '<td class="num">' + escapeHtml(formatMmSs(court)) + '</td>' +
+        '<td class="num">' + escapeHtml(formatMmSs(bench)) + '</td>' +
+        '<td class="num">' + pct(planPct) + '</td>' +
+        '<td class="num">' + (p.assists != null ? p.assists : 0) + '</td>' +
+        '<td class="num">' + (p.fouls != null ? p.fouls : 0) + '</td>' +
+        '<td class="num">' + (p.goals != null ? p.goals : 0) + '</td>' +
+        '<td class="num">' + shots + '</td>' +
+        '<td class="num">' + made + '</td>' +
+        '<td class="num">' + (shotPct == null ? '–' : pct(shotPct)) + '</td>' +
+        '</tr>'
+      );
+    }).join('');
+
+    return (
+      '<article class="match-card">' +
+      '<h2>' + title + '</h2>' +
+      (meta ? '<p class="match-meta">' + meta + '</p>' : '') +
+      '<div class="table-wrap"><table class="match-table">' +
+      '<thead><tr>' +
+      '<th>Spelare</th><th>Plan</th><th>Bänk</th><th>% plan</th>' +
+      '<th>A</th><th>F</th><th>P</th><th>S</th><th>T</th><th>Skott %</th>' +
+      '</tr></thead><tbody>' + rows + '</tbody></table></div>' +
+      '</article>'
+    );
+  }
+
+  function showStatus(msg, isError) {
+    var el = document.getElementById('matcher-status');
+    if (!el) return;
+    el.textContent = msg || '';
+    el.hidden = !msg;
+    el.className = 'lp-msg' + (isError ? ' error' : '');
+  }
+
+  var BADGE = {
+    checking: { cls: 'checking', text: '🟡 Kontrollerar anslutning…', title: 'Anslutning kontrolleras' },
+    cloud: { cls: 'cloud', text: '🟢 Data från databasen', title: 'Matchlistan hämtas från BasketTime-servern' },
+    offline: { cls: 'offline', text: '🔴 API ej tillgänglig', title: 'Kunde inte nå /api/public/matches. Kontrollera nätverk eller att baskettime.app är igång.' }
+  };
+
+  function setApiBadge(mode) {
+    var b = document.getElementById('matcher-api-badge');
+    if (!b || !BADGE[mode]) return;
+    var cfg = BADGE[mode];
+    b.className = 'storage-status-badge storage-status-badge--' + cfg.cls;
+    b.textContent = cfg.text;
+    b.title = cfg.title;
+    b.setAttribute('aria-label', 'Anslutningsstatus: ' + cfg.text.replace(/[🟢🔴🟡]\s*/, ''));
+  }
+
+  function apiUrls() {
+    var meta = document.querySelector('meta[name="baskettime-api-origin"]');
+    var custom = meta && meta.getAttribute('content') != null ? meta.getAttribute('content').trim() : '';
+    var primary = custom
+      ? custom.replace(/\/$/, '') + '/api/public/matches'
+      : new URL('/api/public/matches', window.location.href).href;
+    var fallback = 'https://baskettime.app/api/public/matches';
+    var list = [primary];
+    if (primary !== fallback) list.push(fallback);
+    return list;
+  }
+
+  function fetchJson(url) {
+    return fetch(url, { credentials: 'omit', mode: 'cors' }).then(function (r) {
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      return r.json();
+    });
+  }
+
+  var root = document.getElementById('matcher-root');
+  showStatus('Laddar matcher…', false);
+  setApiBadge('checking');
+
+  (function load() {
+    var urls = apiUrls();
+    var i = 0;
+    function next() {
+      if (i >= urls.length) {
+        setApiBadge('offline');
+        showStatus('Kunde inte hämta matcher. Om sidan ligger på en annan domän än appen, säkerställ att baskettime.app (API) är tillgänglig.', true);
+        if (root) root.innerHTML = '';
+        return;
+      }
+      fetchJson(urls[i++]).then(function (data) {
+        showStatus('', false);
+        setApiBadge('cloud');
+        var matches = data.matches || [];
+        if (matches.length === 0) {
+          root.innerHTML = '<p class="lp-msg" style="background:var(--lp-card);color:var(--lp-muted);">Inga matcher är registrerade ännu.</p>';
+          return;
+        }
+        root.innerHTML = matches.map(renderMatch).join('');
+      }).catch(function () { next(); });
+    }
+    next();
+  })();
+})();
+  </script>
+</body>
+</html>

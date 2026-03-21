@@ -14,6 +14,7 @@ from backend.models import db
 LANDING_HOSTS = {"baskettime.se", "www.baskettime.se"}
 from backend.routes.auth_routes import bp as auth_bp
 from backend.routes.matches_routes import bp as matches_bp
+from backend.routes.public_routes import bp as public_bp
 from backend.routes.teams_routes import bp as teams_bp
 
 DEV_SECRET = "dev-secret-change-in-production"
@@ -52,6 +53,7 @@ def create_app():
     app.register_blueprint(auth_bp)
     app.register_blueprint(teams_bp)
     app.register_blueprint(matches_bp)
+    app.register_blueprint(public_bp)
 
     with app.app_context():
         db.create_all()
@@ -66,6 +68,10 @@ def create_app():
     @app.route("/landing")
     def landing():
         return send_from_directory(".", "landing.html")
+
+    @app.route("/landing/matcher")
+    def landing_matcher():
+        return send_from_directory(".", "landing/matcher.html")
 
     @app.route("/<path:path>")
     def static_file(path):
