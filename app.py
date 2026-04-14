@@ -19,7 +19,6 @@ from backend.schema_migrations import (
 LANDING_HOSTS = {"baskettime.se", "www.baskettime.se"}
 from backend.routes.auth_routes import bp as auth_bp
 from backend.routes.matches_routes import bp as matches_bp
-from backend.routes.profixio_routes import bp as profixio_bp
 from backend.routes.public_routes import bp as public_bp
 from backend.routes.teams_routes import bp as teams_bp
 
@@ -66,7 +65,6 @@ def create_app():
     app.register_blueprint(auth_bp)
     app.register_blueprint(teams_bp)
     app.register_blueprint(matches_bp)
-    app.register_blueprint(profixio_bp)
     app.register_blueprint(public_bp)
 
     with app.app_context():
