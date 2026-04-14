@@ -181,30 +181,3 @@ class UserProfixioPlayerLink(db.Model):
     tournament_id = Column(Integer, nullable=False, index=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     __table_args__ = (UniqueConstraint("user_id", "local_team_id", "local_player_id", name="uq_user_local_player"),)
-
-
-class ProfixioSyncConfig(db.Model):
-    """
-    Admin-konfig för återkommande synk (en gång per dygn) av en specifik turnering.
-    """
-
-    __tablename__ = "profixio_sync_configs"
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    tournament_id = Column(Integer, nullable=False, index=True)
-    organisation_id = Column(String(64), nullable=True, index=True)
-    enabled = Column(Integer, nullable=False, default=1)  # 1/0 (för enkel cross-db)
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, index=True)
-    __table_args__ = (UniqueConstraint("tournament_id", name="uq_profixio_sync_tournament"),)
-
-
-class ProfixioSyncState(db.Model):
-    """
-    Körstatus för daglig synk (för att undvika parallella körningar mellan processer).
-    """
-
-    __tablename__ = "profixio_sync_state"
-    id = Column(Integer, primary_key=True, autoincrement=False, default=1)
-    last_run_at = Column(DateTime, nullable=True, index=True)
-    running = Column(Integer, nullable=False, default=0)  # 1/0
-    updated_at = Column(DateTime, default=datetime.utcnow, index=True)

@@ -12,8 +12,6 @@ from backend.models import (
     ProfixioPlayer,
     ProfixioTeam,
     ProfixioTournament,
-  ProfixioSyncConfig,
-  ProfixioSyncState,
     UserProfixioPlayerLink,
     UserProfixioTeamLink,
     db,
@@ -21,9 +19,10 @@ from backend.models import (
 from backend.profixio_client import (
     ProfixioError,
     fetch_all_organisation_tournaments,
+    fetch_all_tournament_matches,
+    fetch_all_tournament_teams,
     get_userinfo,
 )
-from backend.profixio_sync import sync_tournament
 
 bp = Blueprint("profixio", __name__, url_prefix="/api/profixio")
 
@@ -95,126 +94,146 @@ def profixio_sync():
     except Exception:
         return {"error": "tournamentId must be integer"}, 400
 
+    now = _now()
+    # Teams (try with playerList=1 first; if not permitted, fallback to without)
+    teams = []
+    used_player_list = False
     try:
-        result = sync_tournament(tournament_id_int, organisation_id=organisation_id or None)
+        teams = fetch_all_tournament_teams(tournament_id_int, player_list=True)
+        used_player_list = True
+    except ProfixioError:
+        teams = fetch_all_tournament_teams(tournament_id_int, player_list=False)
+
+    matches = fetch_all_tournament_matches(tournament_id_int)
+
+    # Cache tournaments if org provided
+    if organisation_id:
+        existing_tour = db.session.get(ProfixioTournament, tournament_id_int)
+        if existing_tour:
+            existing_tour.organisation_id = organisation_id
+            existing_tour.updated_at = now
+
+    # Upsert teams and players (if available in payload)
+    players_count = 0
+    for team in teams:
+        try:
+            team_id = int(team.get("id"))
+        except Exception:
+            continue
+        team_name = team.get("name") or ""
+        club_name = ""
+        club = team.get("club") or {}
+        if isinstance(club, dict):
+            club_name = club.get("name") or ""
+        raw_team = json.dumps(team, ensure_ascii=False)
+        existing_team = ProfixioTeam.query.filter_by(id=team_id, tournament_id=tournament_id_int).first()
+        if existing_team:
+            existing_team.name = team_name
+            existing_team.club_name = club_name
+            existing_team.raw_json = raw_team
+            existing_team.updated_at = now
+        else:
+            db.session.add(ProfixioTeam(id=team_id, tournament_id=tournament_id_int, name=team_name, club_name=club_name, raw_json=raw_team, updated_at=now))
+
+        # Players can be present when playerList=1
+        player_list = team.get("playerList") or team.get("players") or []
+        if isinstance(player_list, list):
+            for p in player_list:
+                if not isinstance(p, dict):
+                    continue
+                pid = p.get("id")
+                if pid is None:
+                    continue
+                try:
+                    pid_int = int(pid)
+                except Exception:
+                    continue
+                pname = p.get("name") or ""
+                jersey = p.get("jerseyNumber")
+                birth = p.get("birthDate")
+                raw_player = json.dumps(p, ensure_ascii=False)
+                existing_player = ProfixioPlayer.query.filter_by(id=pid_int, tournament_id=tournament_id_int).first()
+                if existing_player:
+                    existing_player.team_id = team_id
+                    existing_player.name = pname
+                    existing_player.jersey_number = str(jersey) if jersey is not None else None
+                    existing_player.birth_date = str(birth) if birth is not None else None
+                    existing_player.raw_json = raw_player
+                    existing_player.updated_at = now
+                else:
+                    db.session.add(ProfixioPlayer(
+                        id=pid_int,
+                        tournament_id=tournament_id_int,
+                        team_id=team_id,
+                        name=pname,
+                        jersey_number=str(jersey) if jersey is not None else None,
+                        birth_date=str(birth) if birth is not None else None,
+                        raw_json=raw_player,
+                        updated_at=now,
+                    ))
+                players_count += 1
+
+    matches_count = 0
+    for m in matches:
+        if not isinstance(m, dict):
+            continue
+        mid = m.get("id")
+        if mid is None:
+            continue
+        try:
+            mid_int = int(mid)
+        except Exception:
+            continue
+        start_time = m.get("startTime") or m.get("start_time") or m.get("time") or ""
+        ht = m.get("homeTeam") or {}
+        at = m.get("awayTeam") or {}
+        home_team_id = None
+        away_team_id = None
+        if isinstance(ht, dict) and ht.get("id") is not None:
+            try:
+                home_team_id = int(ht.get("id"))
+            except Exception:
+                home_team_id = None
+        if isinstance(at, dict) and at.get("id") is not None:
+            try:
+                away_team_id = int(at.get("id"))
+            except Exception:
+                away_team_id = None
+        raw_match = json.dumps(m, ensure_ascii=False)
+        existing_match = ProfixioMatch.query.filter_by(id=mid_int, tournament_id=tournament_id_int).first()
+        if existing_match:
+            existing_match.start_time = str(start_time) if start_time else None
+            existing_match.home_team_id = home_team_id
+            existing_match.away_team_id = away_team_id
+            existing_match.raw_json = raw_match
+            existing_match.updated_at = now
+        else:
+            db.session.add(ProfixioMatch(
+                id=mid_int,
+                tournament_id=tournament_id_int,
+                start_time=str(start_time) if start_time else None,
+                home_team_id=home_team_id,
+                away_team_id=away_team_id,
+                raw_json=raw_match,
+                updated_at=now,
+            ))
+        matches_count += 1
+
+    try:
         db.session.commit()
-        return result
-    except ProfixioError as e:
-        db.session.rollback()
-        return {"error": str(e)}, 502
     except Exception:
         db.session.rollback()
         logger.exception("Failed to cache profixio sync tournament_id=%s", tournament_id_int)
         return {"error": "Could not store profixio data"}, 500
 
-
-@bp.route("/admin/config", methods=["GET", "POST", "DELETE"])
-@login_required
-def profixio_admin_config():
-    # Admin-skydd görs här för att inte låsa ute vanliga användare från sök/sync.
-    from backend.auth import admin_required
-
-    @admin_required
-    def _handle():
-        if request.method == "GET":
-            rows = ProfixioSyncConfig.query.order_by(ProfixioSyncConfig.updated_at.desc()).all()
-            return {
-                "configs": [
-                    {
-                        "id": r.id,
-                        "tournamentId": r.tournament_id,
-                        "organisationId": r.organisation_id or "",
-                        "enabled": bool(r.enabled),
-                        "updatedAt": r.updated_at.isoformat() if r.updated_at else "",
-                    }
-                    for r in rows
-                ]
-            }
-
-        if request.method == "POST":
-            data = request.get_json() or {}
-            tournament_id = data.get("tournamentId")
-            organisation_id = (data.get("organisationId") or "").strip() or None
-            enabled = data.get("enabled")
-            if tournament_id is None:
-                return {"error": "tournamentId required"}, 400
-            try:
-                tid = int(tournament_id)
-            except Exception:
-                return {"error": "tournamentId must be integer"}, 400
-            row = ProfixioSyncConfig.query.filter_by(tournament_id=tid).first()
-            now = _now()
-            if row:
-                row.organisation_id = organisation_id
-                if enabled is not None:
-                    row.enabled = 1 if bool(enabled) else 0
-                row.updated_at = now
-            else:
-                row = ProfixioSyncConfig(
-                    tournament_id=tid,
-                    organisation_id=organisation_id,
-                    enabled=1 if (enabled is None or bool(enabled)) else 0,
-                    updated_at=now,
-                )
-                db.session.add(row)
-            try:
-                db.session.commit()
-            except Exception:
-                db.session.rollback()
-                return {"error": "Could not save config"}, 500
-            return {"ok": True}
-
-        # DELETE
-        cfg_id = request.args.get("id")
-        if not cfg_id:
-            return {"error": "id required"}, 400
-        try:
-            cfg_id_int = int(cfg_id)
-        except Exception:
-            return {"error": "id must be integer"}, 400
-        row = db.session.get(ProfixioSyncConfig, cfg_id_int)
-        if not row:
-            return {"ok": True}
-        db.session.delete(row)
-        try:
-            db.session.commit()
-        except Exception:
-            db.session.rollback()
-            return {"error": "Could not delete config"}, 500
-        return {"ok": True}
-
-    return _handle()
-
-
-@bp.route("/admin/run-now", methods=["POST"])
-@login_required
-def profixio_admin_run_now():
-    from backend.auth import admin_required
-
-    @admin_required
-    def _handle():
-        data = request.get_json() or {}
-        tournament_id = data.get("tournamentId")
-        organisation_id = (data.get("organisationId") or "").strip() or None
-        if tournament_id is None:
-            return {"error": "tournamentId required"}, 400
-        try:
-            tid = int(tournament_id)
-        except Exception:
-            return {"error": "tournamentId must be integer"}, 400
-        try:
-            result = sync_tournament(tid, organisation_id=organisation_id)
-            db.session.commit()
-            return result
-        except ProfixioError as e:
-            db.session.rollback()
-            return {"error": str(e)}, 502
-        except Exception:
-            db.session.rollback()
-            logger.exception("Admin run-now failed tournament_id=%s", tid)
-            return {"error": "Could not store profixio data"}, 500
-
-    return _handle()
+    return {
+        "ok": True,
+        "tournamentId": tournament_id_int,
+        "teams": len(teams),
+        "matches": matches_count,
+        "players": players_count,
+        "usedPlayerList": used_player_list,
+    }
 
 
 @bp.route("/search", methods=["GET"])

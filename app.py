@@ -4,15 +4,11 @@ Serves static files and mounts /api for auth, teams, matches.
 """
 import os
 import sys
-import threading
-import time
-from datetime import datetime, timedelta
 
 from flask import Flask, request, send_from_directory
 from werkzeug.middleware.proxy_fix import ProxyFix
 
 from backend.models import db
-from backend.models import ProfixioSyncConfig, ProfixioSyncState
 from backend.schema_migrations import (
     ensure_created_at_columns,
     ensure_match_player_shots_columns,
@@ -26,7 +22,6 @@ from backend.routes.matches_routes import bp as matches_bp
 from backend.routes.profixio_routes import bp as profixio_bp
 from backend.routes.public_routes import bp as public_bp
 from backend.routes.teams_routes import bp as teams_bp
-from backend.profixio_sync import sync_tournament
 
 DEV_SECRET = "dev-secret-change-in-production"
 
@@ -79,68 +74,6 @@ def create_app():
         ensure_user_email_and_reset_columns(db)
         ensure_created_at_columns(db)
         ensure_match_player_shots_columns(db)
-
-    def _is_admin(user):
-        allowed = [x.strip() for x in (os.environ.get("ADMIN_USERNAMES") or "").split(",") if x.strip()]
-        return (not allowed) or (user and user.username in allowed)
-
-    @app.route("/admin/profixio")
-    def admin_profixio_page():
-        # Skydda sidan utan att lägga till template-system.
-        from backend.auth import get_current_user
-
-        user = get_current_user()
-        if not user:
-            return send_from_directory(".", "index.html")
-        if not _is_admin(user):
-            return {"error": "Forbidden"}, 403
-        return send_from_directory(".", "admin-profixio.html")
-
-    def _daily_sync_loop():
-        # Kör en gång per dygn. Förutsätter att turneringar konfigureras via admin-sidan.
-        # För att undvika att flera processer kör samtidigt används ProfixioSyncState.running som enkel låsflagga.
-        while True:
-            try:
-                with app.app_context():
-                    state = db.session.get(ProfixioSyncState, 1)
-                    now = datetime.utcnow()
-                    if not state:
-                        state = ProfixioSyncState(id=1, running=0, last_run_at=None, updated_at=now)
-                        db.session.add(state)
-                        db.session.commit()
-
-                    # Kör om aldrig körd eller om det gått >= 24h
-                    due = (state.last_run_at is None) or (now - state.last_run_at >= timedelta(hours=24))
-                    if due and not state.running:
-                        state.running = 1
-                        state.updated_at = now
-                        db.session.commit()
-                        try:
-                            cfgs = ProfixioSyncConfig.query.filter_by(enabled=1).all()
-                            for cfg in cfgs:
-                                sync_tournament(cfg.tournament_id, organisation_id=cfg.organisation_id or None)
-                            db.session.commit()
-                            state.last_run_at = datetime.utcnow()
-                        except Exception:
-                            db.session.rollback()
-                            print("Daily Profixio sync failed", file=sys.stderr)
-                        finally:
-                            state.running = 0
-                            state.updated_at = datetime.utcnow()
-                            try:
-                                db.session.commit()
-                            except Exception:
-                                db.session.rollback()
-            except Exception:
-                print("Daily Profixio sync loop crashed", file=sys.stderr)
-
-            # Sov 10 minuter mellan checks (minskar load men ger <=10 min fördröjning efter 24h-gräns)
-            time.sleep(600)
-
-    # Starta bakgrundssynk om aktiverat och om API-nyckel finns
-    if (os.environ.get("PROFIXIO_DAILY_SYNC", "true").lower() in ("1", "true", "yes")) and os.environ.get("PROFIXIO_API_SECRET"):
-        t = threading.Thread(target=_daily_sync_loop, name="profixio-daily-sync", daemon=True)
-        t.start()
 
     @app.route("/")
     def index():
