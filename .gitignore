@@ -31,3 +31,12 @@ Thumbs.db
 # Loggar och temporära filer
 *.log
 .cache/
+
+# Arkiv / äldre kod (ska inte versioneras)
+Tidigare kod/
+
+# Presentationer / bilagor
+Playtime ppt.pptm
+
+# Lokala skript/experiment (om de inte ska versioneras)
+scripts/
