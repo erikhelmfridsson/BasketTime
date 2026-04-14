@@ -208,6 +208,14 @@ a.login-logo-wrap:focus-visible {
   color: #1a6b1a;
 }
 
+.settings-email-msg {
+  margin: 8px 0 10px 0;
+}
+
+.settings-email-msg--ok {
+  color: #1a6b1a;
+}
+
 .login-register-btn {
   margin-top: 8px;
 }

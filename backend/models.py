@@ -1,11 +1,11 @@
 """
-SQLAlchemy models: User, Team, TeamPlayer, Match, MatchPlayer.
+SQLAlchemy models: User, Team, TeamPlayer, Match, MatchPlayer + Profixio cache/linking.
 """
 import os
 from datetime import datetime
 
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import Column, DateTime, ForeignKey, Integer, String, Text
+from sqlalchemy import Column, DateTime, ForeignKey, Integer, String, Text, UniqueConstraint
 from werkzeug.security import check_password_hash, generate_password_hash
 
 db = SQLAlchemy()
@@ -113,3 +113,71 @@ class MatchPlayer(db.Model):
             "shots": self.shots,
             "madeShots": self.made_shots,
         }
+
+
+class ProfixioTournament(db.Model):
+    __tablename__ = "profixio_tournaments"
+    id = Column(Integer, primary_key=True, autoincrement=False)
+    organisation_id = Column(String(64), nullable=True, index=True)
+    name = Column(String(255), nullable=True)
+    raw_json = Column(Text, nullable=False)
+    updated_at = Column(DateTime, default=datetime.utcnow, index=True)
+
+
+class ProfixioTeam(db.Model):
+    __tablename__ = "profixio_teams"
+    id = Column(Integer, primary_key=True, autoincrement=False)
+    tournament_id = Column(Integer, nullable=False, index=True)
+    name = Column(String(255), nullable=True, index=True)
+    club_name = Column(String(255), nullable=True, index=True)
+    raw_json = Column(Text, nullable=False)
+    updated_at = Column(DateTime, default=datetime.utcnow, index=True)
+    __table_args__ = (UniqueConstraint("id", "tournament_id", name="uq_profixio_team_id_tournament"),)
+
+
+class ProfixioPlayer(db.Model):
+    __tablename__ = "profixio_players"
+    id = Column(Integer, primary_key=True, autoincrement=False)
+    tournament_id = Column(Integer, nullable=False, index=True)
+    team_id = Column(Integer, nullable=True, index=True)
+    name = Column(String(255), nullable=True, index=True)
+    jersey_number = Column(String(32), nullable=True)
+    birth_date = Column(String(32), nullable=True)
+    raw_json = Column(Text, nullable=False)
+    updated_at = Column(DateTime, default=datetime.utcnow, index=True)
+    __table_args__ = (UniqueConstraint("id", "tournament_id", name="uq_profixio_player_id_tournament"),)
+
+
+class ProfixioMatch(db.Model):
+    __tablename__ = "profixio_matches"
+    id = Column(Integer, primary_key=True, autoincrement=False)
+    tournament_id = Column(Integer, nullable=False, index=True)
+    start_time = Column(String(64), nullable=True, index=True)
+    home_team_id = Column(Integer, nullable=True, index=True)
+    away_team_id = Column(Integer, nullable=True, index=True)
+    raw_json = Column(Text, nullable=False)
+    updated_at = Column(DateTime, default=datetime.utcnow, index=True)
+    __table_args__ = (UniqueConstraint("id", "tournament_id", name="uq_profixio_match_id_tournament"),)
+
+
+class UserProfixioTeamLink(db.Model):
+    __tablename__ = "user_profixio_team_links"
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    local_team_id = Column(String(64), nullable=False, index=True)
+    profixio_team_id = Column(Integer, nullable=False, index=True)
+    tournament_id = Column(Integer, nullable=False, index=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    __table_args__ = (UniqueConstraint("user_id", "local_team_id", name="uq_user_local_team"),)
+
+
+class UserProfixioPlayerLink(db.Model):
+    __tablename__ = "user_profixio_player_links"
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    local_team_id = Column(String(64), nullable=False, index=True)
+    local_player_id = Column(String(64), nullable=False, index=True)
+    profixio_player_id = Column(Integer, nullable=False, index=True)
+    tournament_id = Column(Integer, nullable=False, index=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    __table_args__ = (UniqueConstraint("user_id", "local_team_id", "local_player_id", name="uq_user_local_player"),)

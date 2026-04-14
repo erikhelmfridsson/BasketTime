@@ -117,3 +117,11 @@ def ensure_created_at_columns(db):
     if altered_any:
         # Ingen data-migrering behövs; nya rader får värde från appens default.
         return
+
+
+def ensure_profixio_tables(db):
+    """
+    Skapar Profixio-cache/link-tabeller via create_all(), och gör inga ALTER på befintliga.
+    (create_all körs redan i app.py; denna funktion finns för framtida utökningar.)
+    """
+    return

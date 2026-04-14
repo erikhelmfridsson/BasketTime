@@ -354,6 +354,27 @@
         <a href="https://baskettime.se/baskeregler.html" target="_blank" rel="noopener noreferrer" class="settings-link" data-i18n="settings.linkRules">Baskeregler</a>
         <a href="https://baskettime.se/domartecken.html" target="_blank" rel="noopener noreferrer" class="settings-link" data-i18n="settings.linkSignals">Domartecken</a>
       </div>
+
+      <p class="modal-label" data-i18n="profixio.title">Profixio</p>
+      <p class="settings-email-hint" data-i18n="profixio.hint">Hämta data från Profixio och koppla den till dina lag och spelare.</p>
+      <label class="sr-only" for="profixio-org" data-i18n="profixio.organisationId">Organisation-ID</label>
+      <input type="text" id="profixio-org" class="login-input" placeholder="t.ex. SVBF.SE.SVB" data-i18n-placeholder="profixio.organisationIdPlaceholder">
+      <div class="teams-actions-row">
+        <button type="button" id="btn-profixio-load-tournaments" class="btn btn-secondary btn-touch btn-full" data-i18n="profixio.loadTournaments">Hämta turneringar</button>
+        <button type="button" id="btn-profixio-sync" class="btn btn-primary btn-touch btn-full" data-i18n="profixio.syncSelected">Synka vald</button>
+      </div>
+      <select id="profixio-tournaments" class="create-match-select" aria-label="Turnering" data-i18n-aria-label="profixio.tournamentSelectAria" hidden></select>
+      <p id="profixio-msg" class="settings-email-msg" role="status" hidden></p>
+      <div id="profixio-search-wrap" hidden>
+        <label class="create-match-label" for="profixio-search" data-i18n="profixio.searchLabel">Sök</label>
+        <input type="text" id="profixio-search" class="create-match-input" placeholder="Lag, spelare eller match" data-i18n-placeholder="profixio.searchPlaceholder">
+        <div class="settings-view-wrap" role="group" aria-label="Söktyp">
+          <button type="button" id="btn-profixio-search-teams" class="view-mode-btn active" aria-pressed="true" data-kind="teams" data-i18n="profixio.searchTeams">Lag</button>
+          <button type="button" id="btn-profixio-search-players" class="view-mode-btn" aria-pressed="false" data-kind="players" data-i18n="profixio.searchPlayers">Spelare</button>
+          <button type="button" id="btn-profixio-search-matches" class="view-mode-btn" aria-pressed="false" data-kind="matches" data-i18n="profixio.searchMatches">Matcher</button>
+        </div>
+        <div id="profixio-results" class="history-list" role="list"></div>
+      </div>
       <div class="modal-actions">
         <button type="button" id="btn-logout" class="btn btn-outline btn-touch btn-full" data-i18n="settings.logout">Logga ut</button>
         <button type="button" id="btn-close-settings" class="btn btn-primary btn-touch btn-full" data-i18n="modal.editNames.close">Stäng</button>

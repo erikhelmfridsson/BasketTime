@@ -1020,6 +1020,162 @@
     }
   }
 
+  // ---------- Profixio integration (search + linking) ----------
+  var profixioState = { organisationId: '', tournamentId: null, kind: 'teams', tournaments: [] };
+
+  function setProfixioMsg(text, ok) {
+    var el = document.getElementById('profixio-msg');
+    if (!el) return;
+    el.hidden = !text;
+    el.textContent = text || '';
+    el.className = ok ? 'settings-email-msg settings-email-msg--ok' : 'settings-email-msg';
+  }
+
+  function setProfixioLoading(loading) {
+    var btnLoad = document.getElementById('btn-profixio-load-tournaments');
+    var btnSync = document.getElementById('btn-profixio-sync');
+    if (btnLoad) btnLoad.disabled = !!loading;
+    if (btnSync) btnSync.disabled = !!loading;
+  }
+
+  function renderProfixioTournaments() {
+    var sel = document.getElementById('profixio-tournaments');
+    var wrap = document.getElementById('profixio-search-wrap');
+    if (!sel) return;
+    sel.innerHTML = '';
+    var items = Array.isArray(profixioState.tournaments) ? profixioState.tournaments : [];
+    if (!items.length) {
+      sel.hidden = true;
+      if (wrap) wrap.hidden = true;
+      return;
+    }
+    var opt0 = document.createElement('option');
+    opt0.value = '';
+    opt0.textContent = t('profixio.selectTournament');
+    sel.appendChild(opt0);
+    items.forEach(function (item) {
+      if (!item) return;
+      var opt = document.createElement('option');
+      opt.value = String(item.id || '');
+      opt.textContent = item.name || item.title || ('#' + String(item.id || ''));
+      sel.appendChild(opt);
+    });
+    sel.hidden = false;
+    if (wrap) wrap.hidden = false;
+  }
+
+  function setProfixioKind(kind) {
+    if (kind !== 'teams' && kind !== 'players' && kind !== 'matches') return;
+    profixioState.kind = kind;
+    ['teams', 'players', 'matches'].forEach(function (k) {
+      var btn = document.querySelector('[data-kind="' + k + '"]');
+      if (!btn) return;
+      btn.classList.toggle('active', k === kind);
+      btn.setAttribute('aria-pressed', k === kind ? 'true' : 'false');
+    });
+    runProfixioSearch();
+  }
+
+  function getSelectedProfixioTournamentId() {
+    var sel = document.getElementById('profixio-tournaments');
+    if (!sel || !sel.value) return null;
+    var n = parseInt(sel.value, 10);
+    return isNaN(n) ? null : n;
+  }
+
+  function runProfixioSearch() {
+    var container = document.getElementById('profixio-results');
+    if (!container) return;
+    container.innerHTML = '';
+    var input = document.getElementById('profixio-search');
+    var q = input && input.value ? input.value.trim() : '';
+    var tournamentId = getSelectedProfixioTournamentId();
+    if (!tournamentId) {
+      container.innerHTML = '<div class="empty-state"><p>' + escapeHtml(t('profixio.pickTournamentFirst')) + '</p></div>';
+      return;
+    }
+    var url = '/api/profixio/search?kind=' + encodeURIComponent(profixioState.kind) +
+      '&tournamentId=' + encodeURIComponent(String(tournamentId)) +
+      '&q=' + encodeURIComponent(q);
+    apiFetch(url).then(function (r) {
+      if (!r.ok) throw new Error('search failed');
+      return r.json();
+    }).then(function (data) {
+      renderProfixioResults(data, tournamentId);
+    }).catch(function () {
+      container.innerHTML = '<div class="empty-state"><p>' + escapeHtml(t('profixio.errorSearch')) + '</p></div>';
+    });
+  }
+
+  function renderProfixioResults(data, tournamentId) {
+    var container = document.getElementById('profixio-results');
+    if (!container) return;
+    container.innerHTML = '';
+    var items = [];
+    if (profixioState.kind === 'teams') items = (data && data.teams) || [];
+    if (profixioState.kind === 'players') items = (data && data.players) || [];
+    if (profixioState.kind === 'matches') items = (data && data.matches) || [];
+    if (!items.length) {
+      container.innerHTML = '<div class="empty-state"><p>' + escapeHtml(t('profixio.noResults')) + '</p></div>';
+      return;
+    }
+    items.forEach(function (item) {
+      var row = document.createElement('div');
+      row.className = 'history-item';
+      var title = '';
+      var sub = '';
+      if (profixioState.kind === 'teams') {
+        title = (item.name || '') + (item.clubName ? (' (' + item.clubName + ')') : '');
+        sub = 'ID ' + item.id;
+      } else if (profixioState.kind === 'players') {
+        title = (item.name || '');
+        sub = 'ID ' + item.id + (item.jerseyNumber ? (' #' + item.jerseyNumber) : '');
+      } else {
+        title = 'Match ' + item.id;
+        sub = item.startTime || '';
+      }
+      row.innerHTML =
+        '<span class="history-item-date">' + escapeHtml(title) + '</span>' +
+        '<span class="history-item-duration">' + escapeHtml(sub) + '</span>';
+
+      if (profixioState.kind === 'teams') {
+        var selTeam = document.createElement('select');
+        selTeam.className = 'create-match-select';
+        var opt0 = document.createElement('option');
+        opt0.value = '';
+        opt0.textContent = t('profixio.linkChooseLocalTeam');
+        selTeam.appendChild(opt0);
+        state.teams.forEach(function (team) {
+          var opt = document.createElement('option');
+          opt.value = team.id;
+          opt.textContent = team.name;
+          selTeam.appendChild(opt);
+        });
+        var btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'btn btn-secondary btn-touch';
+        btn.textContent = t('profixio.linkTeam');
+        btn.addEventListener('click', function () {
+          var localTeamId = selTeam.value;
+          if (!localTeamId) return;
+          apiFetch('/api/profixio/link/team', {
+            method: 'POST',
+            body: { localTeamId: localTeamId, profixioTeamId: item.id, tournamentId: tournamentId }
+          }).then(function (r) {
+            if (!r.ok) throw new Error('link failed');
+            setProfixioMsg(t('profixio.linkSaved'), true);
+          }).catch(function () {
+            setProfixioMsg(t('profixio.errorLink'), false);
+          });
+        });
+        row.appendChild(selTeam);
+        row.appendChild(btn);
+      }
+
+      container.appendChild(row);
+    });
+  }
+
   function startMatchFromForm() {
     setCreateMatchError('');
     var nameEl = document.getElementById('input-match-name');
@@ -2179,6 +2335,11 @@
         applyViewMode();
         applyTheme();
         loadSettingsEmailIntoForm();
+        // Profixio
+        var orgInput = document.getElementById('profixio-org');
+        if (orgInput) profixioState.organisationId = orgInput.value ? orgInput.value.trim() : '';
+        setProfixioMsg('', false);
+        renderProfixioTournaments();
         modalSettings.showModal();
       });
       if ((el = document.getElementById('btn-close-settings'))) el.addEventListener('click', function () { modalSettings.close(); });
@@ -2266,6 +2427,74 @@
         });
       }
     }
+
+    // Profixio controls (settings modal)
+    if ((el = document.getElementById('btn-profixio-load-tournaments'))) {
+      el.addEventListener('click', function () {
+        var orgInput = document.getElementById('profixio-org');
+        var orgId = orgInput && orgInput.value ? orgInput.value.trim() : '';
+        if (!orgId) {
+          setProfixioMsg(t('profixio.errorOrganisationId'), false);
+          return;
+        }
+        setProfixioLoading(true);
+        setProfixioMsg(t('profixio.loadingTournaments'), false);
+        apiFetch('/api/profixio/tournaments?organisationId=' + encodeURIComponent(orgId)).then(function (r) {
+          return r.json().catch(function () { return {}; }).then(function (data) {
+            if (!r.ok) throw new Error(data.error || 'failed');
+            profixioState.tournaments = data.tournaments || [];
+            renderProfixioTournaments();
+            setProfixioMsg(t('profixio.tournamentsLoaded', { n: (profixioState.tournaments || []).length }), true);
+          });
+        }).catch(function () {
+          setProfixioMsg(t('profixio.errorLoadTournaments'), false);
+        }).finally(function () {
+          setProfixioLoading(false);
+        });
+      });
+    }
+
+    if ((el = document.getElementById('btn-profixio-sync'))) {
+      el.addEventListener('click', function () {
+        var orgInput = document.getElementById('profixio-org');
+        var orgId = orgInput && orgInput.value ? orgInput.value.trim() : '';
+        var tournamentId = getSelectedProfixioTournamentId();
+        if (!tournamentId) {
+          setProfixioMsg(t('profixio.pickTournamentFirst'), false);
+          return;
+        }
+        setProfixioLoading(true);
+        setProfixioMsg(t('profixio.syncing'), false);
+        apiFetch('/api/profixio/sync', { method: 'POST', body: { organisationId: orgId, tournamentId: tournamentId } }).then(function (r) {
+          return r.json().catch(function () { return {}; }).then(function (data) {
+            if (!r.ok) throw new Error(data.error || 'failed');
+            setProfixioMsg(t('profixio.syncDone', { teams: data.teams || 0, players: data.players || 0, matches: data.matches || 0 }), true);
+            runProfixioSearch();
+          });
+        }).catch(function () {
+          setProfixioMsg(t('profixio.errorSync'), false);
+        }).finally(function () {
+          setProfixioLoading(false);
+        });
+      });
+    }
+
+    if ((el = document.getElementById('profixio-tournaments'))) {
+      el.addEventListener('change', function () {
+        runProfixioSearch();
+      });
+    }
+    if ((el = document.getElementById('profixio-search'))) {
+      el.addEventListener('input', function () {
+        runProfixioSearch();
+      });
+    }
+    document.querySelectorAll('[data-kind]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var kind = btn.getAttribute('data-kind');
+        setProfixioKind(kind);
+      });
+    });
 
     updateMasterClockDisplay();
     setMatchStatusDisplay(false);
