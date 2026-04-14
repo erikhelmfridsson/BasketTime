@@ -548,7 +548,16 @@
       if (idx >= 0) list.splice(idx, 1);
       list.unshift(match);
       stateMatchesCache = list;
-      apiFetch('/api/matches', { method: 'POST', body: match }).catch(function () {});
+      apiFetch('/api/matches', { method: 'POST', body: match }).then(function (r) {
+        if (r.ok) return;
+        if (r.status === 401) {
+          setCreateMatchError(t('activeMatch.saveOngoingUnauthorized'));
+          return;
+        }
+        setCreateMatchError(t('activeMatch.saveOngoingError'));
+      }).catch(function () {
+        setCreateMatchError(t('activeMatch.saveOngoingError'));
+      });
       return;
     }
     var list = loadMatches();
@@ -564,8 +573,21 @@
 
   function deleteMatchById(id) {
     if (apiState.loggedIn) {
+      setHistoryError('');
+      var prev = stateMatchesCache ? stateMatchesCache.slice() : null;
       if (stateMatchesCache) stateMatchesCache = stateMatchesCache.filter(function (m) { return m.id !== id; });
-      apiFetch('/api/matches/' + encodeURIComponent(id), { method: 'DELETE' }).catch(function () {});
+      apiFetch('/api/matches/' + encodeURIComponent(id), { method: 'DELETE' }).then(function (r) {
+        if (r.ok) return;
+        if (prev) stateMatchesCache = prev;
+        setHistoryError(t(r.status === 401 ? 'activeMatch.saveOngoingUnauthorized' : 'activeMatch.saveOngoingError'));
+        renderHistoryList();
+        renderStatsList();
+      }).catch(function () {
+        if (prev) stateMatchesCache = prev;
+        setHistoryError(t('activeMatch.saveOngoingError'));
+        renderHistoryList();
+        renderStatsList();
+      });
       return;
     }
     var list = loadMatches().filter(function (m) { return m.id !== id; });
@@ -574,8 +596,21 @@
 
   function clearAllMatches() {
     if (apiState.loggedIn) {
+      setHistoryError('');
+      var prev = stateMatchesCache ? stateMatchesCache.slice() : [];
       stateMatchesCache = [];
-      apiFetch('/api/matches/clear', { method: 'POST' }).catch(function () {});
+      apiFetch('/api/matches/clear', { method: 'POST' }).then(function (r) {
+        if (r.ok) return;
+        stateMatchesCache = prev;
+        setHistoryError(t(r.status === 401 ? 'activeMatch.saveOngoingUnauthorized' : 'activeMatch.saveOngoingError'));
+        renderHistoryList();
+        renderStatsList();
+      }).catch(function () {
+        stateMatchesCache = prev;
+        setHistoryError(t('activeMatch.saveOngoingError'));
+        renderHistoryList();
+        renderStatsList();
+      });
       return;
     }
     saveMatches([]);
@@ -971,6 +1006,14 @@
 
   function setCreateMatchError(msg) {
     var el = document.getElementById('create-match-error');
+    if (el) {
+      el.textContent = msg || '';
+      el.hidden = !msg;
+    }
+  }
+
+  function setHistoryError(msg) {
+    var el = document.getElementById('history-error');
     if (el) {
       el.textContent = msg || '';
       el.hidden = !msg;

@@ -9,7 +9,11 @@ from flask import Flask, request, send_from_directory
 from werkzeug.middleware.proxy_fix import ProxyFix
 
 from backend.models import db
-from backend.schema_migrations import ensure_user_email_and_reset_columns
+from backend.schema_migrations import (
+    ensure_created_at_columns,
+    ensure_match_player_shots_columns,
+    ensure_user_email_and_reset_columns,
+)
 
 # Domäner som ska visa landningssidan istället för appen (resten får index/app)
 LANDING_HOSTS = {"baskettime.se", "www.baskettime.se"}
@@ -47,7 +51,14 @@ def create_app():
         app.wsgi_app = ProxyFix(
             app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_port=1, x_prefix=1
         )
-        app.config["SESSION_COOKIE_SECURE"] = True
+        # Secure-session kräver HTTPS i webbläsaren. Lokalt med http:// + DATABASE_URL
+        # måste cookien kunna sättas: sätt SESSION_COOKIE_SECURE=false, annars 401 på alla /api.
+        # På Render (HTTPS) används standard True via miljövariabeln RENDER.
+        _sec = os.environ.get("SESSION_COOKIE_SECURE")
+        if _sec is not None:
+            app.config["SESSION_COOKIE_SECURE"] = _sec.lower() in ("1", "true", "yes")
+        else:
+            app.config["SESSION_COOKIE_SECURE"] = os.environ.get("RENDER") == "true"
         app.config["PREFERRED_URL_SCHEME"] = "https"
 
     db.init_app(app)
@@ -59,6 +70,8 @@ def create_app():
     with app.app_context():
         db.create_all()
         ensure_user_email_and_reset_columns(db)
+        ensure_created_at_columns(db)
+        ensure_match_player_shots_columns(db)
 
     @app.route("/")
     def index():
