@@ -179,7 +179,12 @@ def delete_match(match_id):
 def clear_all():
     user = get_current_user()
     try:
-        deleted = Match.query.filter_by(user_id=user.id).delete()
+        # Undvik bulk-delete: den kan hoppa över ORM-cascades och lämna orphans
+        # (särskilt i SQLite där foreign key constraints kan vara avstängda).
+        matches = Match.query.filter_by(user_id=user.id).all()
+        deleted = len(matches)
+        for m in matches:
+            db.session.delete(m)
         db.session.commit()
         logger.info("Cleared %s matches for user_id=%s", deleted, user.id)
     except Exception:
