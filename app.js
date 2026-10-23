@@ -276,12 +276,13 @@
       state.matchElapsedMs = getMatchElapsedMs();
       state.matchRunning = false;
       state.matchStartTime = null;
+      // Frys plantid men behåll Plan/Bänk – byten sker bara manuellt.
       for (var i = 0; i < numPlayers(); i++) {
         if (state.playerOnCourtSince[i] !== null && state.playerOnCourtSince[i] !== 0) {
           var added = Math.floor((Date.now() - state.playerOnCourtSince[i]) / 1000);
           state.playerCourtSeconds[i] = (state.playerCourtSeconds[i] || 0) + added;
+          state.playerOnCourtSince[i] = 0;
         }
-        state.playerOnCourtSince[i] = null;
       }
     }
     setMatchStatusDisplay(false);
