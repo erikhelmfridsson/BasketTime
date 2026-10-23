@@ -7,7 +7,7 @@ Alla guider ligger i **projektroten** (samma mapp som `app.py`). Kort vad varje 
 | **[README.md](./README.md)** | Vad BasketTime är, köra lokalt, deploy-översikt, länkar till övriga guider. |
 | **[DOCS.md](./DOCS.md)** | Denna fil – översikt över dokumentationen. |
 | **[TODO.md](./TODO.md)** | Att-göra-lista för drift, test efter deploy och valfria förbättringar. |
-| **[DEPLOY.md](./DEPLOY.md)** | Git/GitHub, Render auto-deploy, miljövariabler, felsökning, PWA-cache (`sw.js`). |
+| **[DEPLOY.md](./DEPLOY.md)** | Git/GitHub, Render auto-deploy, miljövariabler, felsökning (inkl. SQLAlchemy/psycopg), PWA-cache (`sw.js`). |
 | **[STANDARD-SETUP.md](./STANDARD-SETUP.md)** | Rekommenderad Render-konfiguration (Blueprint `render.yaml` eller manuellt). |
 | **[RENDER-DATABAS-OCH-DOMAN.md](./RENDER-DATABAS-OCH-DOMAN.md)** | PostgreSQL på Render, `DATABASE_URL`/`SECRET_KEY`, egen domän & HTTPS, **e-post/SMTP** och `PUBLIC_APP_URL` för lösenordsåterställning. |
 | **[DATABAS-LOOPIA.md](./DATABAS-LOOPIA.md)** | MariaDB/MySQL i **Loopia** (om du inte använder Render PostgreSQL); begränsningar för app på Render. |

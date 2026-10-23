@@ -12,8 +12,11 @@ Detta är den rekommenderade grundkonfigurationen: en webbtjänst + en PostgreSQ
 | **Build** | `pip install -r requirements.txt` |
 | **Databas** | PostgreSQL (plan: free; kan uppgraderas till starter osv.) |
 | **Miljö** | `SECRET_KEY` (genereras av Render), `DATABASE_URL` (kopplas till databasen) |
+| **Postgres-driver** | `psycopg2-binary` + SQLAlchemy **2.0.x** (`sqlalchemy>=2.0.16,<2.1`). URL tvingas till `postgresql+psycopg2://` i `app.py`. |
 
 Tabellerna (användare, lag, matcher) skapas automatiskt när appen startar. Befintliga databaser kan få extra kolumner för e-post/lösenordsåterställning utan manuell migrering (se `backend/schema_migrations.py`).
+
+**Obs:** Om deploy failar efter lyckad build med `No module named 'psycopg'`, se felsökning i [DEPLOY.md](./DEPLOY.md) (avsnitt *SQLAlchemy / Postgres-driver*).
 
 **Valfritt i produktion:** för **Glömt lösenord** och e-postlänkar, sätt även SMTP-variabler (`MAIL_*`) och **`PUBLIC_APP_URL`** enligt [RENDER-DATABAS-OCH-DOMAN.md](./RENDER-DATABAS-OCH-DOMAN.md).
 

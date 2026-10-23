@@ -66,6 +66,36 @@ Om du får **autentiseringsfel** vid push:
 | Render: "Build failed" | Kolla build-loggen. Saknas `requirements.txt` eller fel Python-version? Ställ **Python Version** under Environment till t.ex. 3.12. |
 | Render: App kraschar efter start | Kolla att `DATABASE_URL` och `SECRET_KEY` är satta och att startkommandot är `gunicorn app:app`. |
 | Sidan visar "Application failed" | Öppna **Logs** på Render för felmeddelanden; ofta databas eller miljövariabler. |
+| `ModuleNotFoundError: No module named 'psycopg'` | Se avsnittet **SQLAlchemy / Postgres-driver** nedan. |
+
+---
+
+## SQLAlchemy / Postgres-driver (Render)
+
+**Symptom:** Builden lyckas (`Build successful`), men deployen failar vid start med:
+
+```text
+ModuleNotFoundError: No module named 'psycopg'
+```
+
+**Orsak:** Från SQLAlchemy **2.1** är standarddrivern för `postgresql://` **psycopg (v3)**. BasketTime använder **`psycopg2-binary`** (v2). Om `pip` plockar upp SQLAlchemy 2.1+ utan att `psycopg` finns installerat kraschar appen när den kopplar till databasen.
+
+**Lösning i detta repo (ska redan finnas):**
+
+1. I **`requirements.txt`** är SQLAlchemy pinnad till 2.0.x:
+   ```text
+   sqlalchemy>=2.0.16,<2.1
+   psycopg2-binary>=2.9.0
+   ```
+2. I **`app.py`** konverteras `DATABASE_URL` till drivern `postgresql+psycopg2://` (så SQLAlchemy använder psycopg2 även om en nyare SQLAlchemy skulle sneakas in).
+
+**Om felet återkommer:**
+
+- Kontrollera att `requirements.txt` fortfarande har `sqlalchemy>=2.0.16,<2.1` och `psycopg2-binary`.
+- Pusha och låt Render deploya igen (eller **Manual Deploy** → **Deploy latest commit**).
+- Rensa **inte** databasen – det här är bara paket/driver, inte data.
+
+**Alternativ (om ni någon gång vill uppgradera till SQLAlchemy 2.1+):** lägg till `psycopg[binary]` i `requirements.txt` och byt till `postgresql+psycopg://`, eller behåll `psycopg2` men se till att URL:en alltid är `postgresql+psycopg2://`.
 
 ---
 

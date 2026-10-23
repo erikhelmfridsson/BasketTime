@@ -57,6 +57,12 @@ Om databasen skapades separat: klicka **Connect** på databasen, kopiera **Inter
 
 4. Spara. Render startar om appen. Vid första anrop mot appen skapas tabellerna (användare, lag, matcher) automatiskt via `db.create_all()`.
 
+### Postgres-driver (psycopg2)
+
+Appen använder **`psycopg2-binary`**. I `requirements.txt` är **SQLAlchemy pinnad till 2.0.x** (`sqlalchemy>=2.0.16,<2.1`), och `app.py` tvingar `DATABASE_URL` till `postgresql+psycopg2://`.
+
+Utan detta kan en nyare SQLAlchemy (2.1+) vid deploy kräva paketet `psycopg` (v3) och krascha med `ModuleNotFoundError: No module named 'psycopg'` trots lyckad build. Mer felsökning: [DEPLOY.md](./DEPLOY.md).
+
 ### Vad som finns i databasen
 
 - **users** – inloggade användare (användarnamn, lösenords-hash, valfri **e-post** för inloggning och lösenordsåterställning, samt fält för återställningstoken).
