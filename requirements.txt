@@ -1,5 +1,8 @@
 flask>=3.0.0
 gunicorn>=21.0.0
 flask-sqlalchemy>=3.1.0
+# SQLAlchemy 2.1 byter default Postgres-driver till psycopg (v3);
+# vi använder psycopg2-binary, så håll 2.0.x tills vidare.
+sqlalchemy>=2.0.16,<2.1
 psycopg2-binary>=2.9.0
 PyMySQL>=1.1.0

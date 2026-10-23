@@ -33,10 +33,15 @@ def create_app():
         print("VARNING: SECRET_KEY är inte satt. Sätt miljövariabeln SECRET_KEY i produktion.", file=sys.stderr)
     database_url = os.environ.get("DATABASE_URL")
     if database_url:
+        # Render ger ofta postgres:// – SQLAlchemy vill ha postgresql://.
+        # Tvinga psycopg2-drivern (psycopg2-binary) så SQLAlchemy 2.1+ inte
+        # försöker importera psycopg (v3) som vi inte har installerat.
         if database_url.startswith("postgres://"):
-            database_url = database_url.replace("postgres://", "postgresql://", 1)
+            database_url = database_url.replace("postgres://", "postgresql+psycopg2://", 1)
+        elif database_url.startswith("postgresql://"):
+            database_url = database_url.replace("postgresql://", "postgresql+psycopg2://", 1)
         # Tvinga SSL för PostgreSQL (t.ex. Render) om inte redan angivet
-        if database_url.startswith("postgresql://") and "sslmode=" not in database_url:
+        if database_url.startswith("postgresql") and "sslmode=" not in database_url:
             database_url += "?sslmode=require" if "?" not in database_url else "&sslmode=require"
         app.config["SQLALCHEMY_DATABASE_URI"] = database_url
     else:
